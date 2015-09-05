@@ -1,0 +1,81 @@
+USE [C09]
+GO
+/****** Object:  StoredProcedure [dbo].[OrganizationAddresses_SelectByLocation]    Script Date: 9/4/2015 10:32:06 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROC [dbo].[OrganizationAddresses_SelectByLocation]
+
+@lat decimal(9,6),
+@lng decimal(9,6),
+@distance int,
+@organizationName varchar
+as
+
+BEGIN
+
+
+;with AllRecords as (
+SELECT
+		a.Id,
+		a.Created,
+		a.Address1,
+		a.Address2,
+		a.City,
+		sp.StateProvinceCode,
+		a.Zip,
+		a.Country,
+		a.Latitude,
+		a.Longitude
+		,(3959*acos( cos( radians(@lat))*cos(radians(a.Latitude))*cos(radians(a.Longitude) - radians(@lng))+sin(radians(@lat))*sin(radians(a.Latitude))))
+		as distance
+		FROM dbo.Addresses a
+		LEFT JOIN dbo.[StateProvince] sp
+		ON a.StateProvinceId = sp.StateProvinceId
+	)
+	, filteredRecords as (
+		Select *
+		From AllRecords
+		Where distance<@distance
+	)
+	select
+		o.Id
+		,o.Uid
+		,o.Created
+		,o.Name
+		,o.ContactName
+		,o.Phone
+		,o.AddressId
+		,o.Url
+		,o.Slug
+		,o.ExternalCustomerId
+		,o.SubscriptionId
+		,filteredRecords.Id
+		,filteredRecords.Created
+		,filteredRecords.Address1
+		,filteredRecords.Address2
+		,filteredRecords.City
+		,filteredRecords.StateProvinceCode
+		,filteredRecords.Zip
+		,filteredRecords.Country
+		,filteredRecords.Latitude
+		,filteredRecords.Longitude
+		,distance
+		,med.Id
+		,med.Path
+		,med.Created
+		,med.MediaType
+		,med.UserType
+		,med.Description
+		,med.Title
+		,med.ContentType
+		
+	FROM filteredRecords
+	LEFT JOIN dbo.Organizations o
+	ON o.AddressId = filteredRecords.Id
+	LEFT JOIN dbo.Medias med
+	on o.MediaId = med.Id
+	where o.Name like @organizationName +'%'
+	ORDER BY distance;
+	END
