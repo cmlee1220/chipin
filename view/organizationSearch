@@ -1,0 +1,392 @@
+@{
+    ViewBag.Title = "OrgSearch";
+    Layout = "~/Views/Shared/_ChipinLayout.cshtml";
+}
+<style>
+    .btn {
+        margin: -17px -8px 9px;
+        margin-top: -14px;
+        padding: 10px 50px 12px;
+        text-align: left;
+        border-radius: 0px;
+    }
+
+    .form-control {
+        background-color: #E6E9ED;
+        border: none;
+        border-radius: 0px;
+        height: 30px;
+        padding: 6px 6px 5px 10px;
+    }
+
+        .form-control::-moz-placeholder {
+            color: #999;
+            opacity: 1;
+        }
+
+    *, *::before, *::after {
+        box-sizing: inherit;
+    }
+    
+    .img-responsive {
+        height: 100%;
+        width: 100%;
+        max-width: 300px;
+    }
+    .item {
+        width: 200px;
+        height: 300px;
+        margin: 30px;
+    }
+</style>
+<div data-ng-controller="orgSearchController as dashboard" id="orgSearchCtrler" ng-cloak>
+    <section id="portfolio">
+
+        <div class="container inner">
+            <div class="row">
+                <div class="col-md-8 col-sm-9 center-block text-center">
+                    <br />
+                    <br />
+                    <header>
+                        <h1>Organizations</h1>
+                        <p>This is where we describe what Chipin' is about and how it contributes to the community.  Show how many merchants and organizations we have.</p>
+                        <br />
+                    </header>
+                </div><!-- /.col center-block -->
+            </div><!--.row-->
+
+            <div class="col-md-8 center-block">
+                <form role="form" id="orgSearchForm" name="dashboard.orgSearchForm" ng-submit="dashboard.searchSubmit()" novalidate>
+                    <div style="white-space:nowrap">
+                        <div class="row">
+                            <div class="form-group col-md-1">
+                                <label for="search">Search by:</label>
+                            </div>
+                        
+                        <div class="row" style="display:inherit">
+                            <div class="form-group col-md-3">
+                                <input style="background-color: #e6e9ed"
+                                       type="text"
+                                       id="searchBy"
+                                       name="searchBy"
+                                       ng-model="dashboard.query.searchBy"
+                                       class="form-control"
+                                       placeholder="CITY, STATE or ZIP CODE" />
+                                <label for="searchBy"></label>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-2">
+                                    <input style="background-color: #e6e9ed"
+                                           type="text"
+                                           id="name"
+                                           name="name"
+                                           ng-model="dashboard.query.name"
+                                           class="form-control"
+                                           placeholder="ORGANIZATION" />
+
+                                    <label for="organization"></label>
+                                </div>
+
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-2">
+                                    <select style="margin-top:-14px; margin-bottom:8px"
+                                            type="text"
+                                            id="distance"
+                                            name="distance"
+                                            ng-model="dashboard.query.distance"
+                                            class="form-control"
+                                            placeholder="DISTANCE">
+                                        <option value="">DISTANCE</option>
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-1">
+                                    <button type="button" id="btn-submit-search" class="btn btn-lg" ng-click="dashboard.searchSubmit()">Search</button>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+
+                        </div><!-- /.row -->
+</form>
+                <div role="alert" class="row alert" ng-cloak>
+                    <span class="alert alert-danger error" ng-show="dashboard.showFormErrors">Organization Name is required</span>
+                    <span class="alert alert-danger error" ng-show="dashboard.showDistanceErrors">Distance is required</span>
+                    <div class="row" data-ng-cloak>
+                        <div class="col-sm-12 alert alert-danger error" data-ng-if="dashboard.hasError" style="opacity:1">
+                            {{dashboard.errorList}}
+                        </div>
+                    </div><!-- /.form-group -->
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-sm-1 col-sm-offset-11">
+                    <a href="/map/organizations"><i class="icon-location-1"></i></a>
+                </div>
+            </div>
+        <div class="row">
+            <div class="col-sm-12 ">
+
+                <div class="text-center col-sm-8 col-sm-offset-0">
+                    <div class="center-block">
+                        <ul class="nav navbar-nav" ng-repeat=" category in dashboard.categories">
+                            <li style="display:inline"><a href="#" data-ng-click="dashboard.category('{{category.id}}')">{{category.name}}</a></li>
+                        </ul><!-- /.filter -->
+                    </div>
+                </div>
+                <div class="container center-block">
+                    <div class="row">
+                        <ul class="col-sm-12 ">
+                            <li style="display:inline; float:left" class="gap item" data-ng-repeat="mer in dashboard.results  | limitTo: 16 track by $index">
+                                <div class="item">
+                                    <a href="/profile/merchant/{{mer.uid}}">
+                                        <h4>{{mer.name}}</h4>
+                                        <figure>
+                                            <img ng-src="{{mer.media.fullPath || 'http://www.corebehavior.com/wp-content/uploads/2013/08/hands-sky.jpg'}}" alt="" class="img-responsive">
+                                            <figcaption class=" text-overlay">
+                                                <div class="info">
+                                                    <p>{{mer.address.city}}</p>
+                                                    <p ng-if="mer.address.distance">{{mer.address.distance | number: 2}} miles away.</p>
+                                                </div><!-- /.info -->
+                                            </figcaption>
+                                        </figure>
+                                    </a>
+                                </div>
+                            </li><!-- /.item -->
+                        </ul><!-- /.items -->
+                    </div><!--  row -->
+                </div><!-- /.col -->
+            
+            </div><!-- /.items -->
+                </div><!-- /.col -->
+        </div><!-- /.row -->
+        <!-- /.container top-->
+    </section>
+</div>
+    <!-- ============================================================= SECTION – PORTFOLIO : END ============================================================= -->
+    <!-- ============================================================= SECTION – SHARE ============================================================= -->
+
+    <section id="share" class="light-bg">
+        <div class="container">
+
+            <div class="col-sm-4 reset-padding">
+                <a href="#" class="btn-share-md">
+                    <p class="name">Facebook</p>
+                    <i class="icon-s-facebook"></i>
+                    <p class="counter">1080</p>
+                </a>
+            </div><!-- /.col -->
+
+            <div class="col-sm-4 reset-padding">
+                <a href="#" class="btn-share-md">
+                    <p class="name">Twitter</p>
+                    <i class="icon-s-twitter"></i>
+                    <p class="counter">1263</p>
+                </a>
+            </div><!-- /.col -->
+
+            <div class="col-sm-4 reset-padding">
+                <a href="#" class="btn-share-md">
+                    <p class="name">Google +</p>
+                    <i class="icon-s-gplus"></i>
+                    <p class="counter">963</p>
+                </a>
+            </div><!-- /.col -->
+
+        </div><!-- /.container -->
+
+    </section>
+
+<!-- /.data-ng-controller -->
+@*----------------------------------SCRIPTS BEGIN----------------------------*@
+@section Scripts{
+<script src="~/Scripts/sabio.services.category.js"></script>
+    <script src="~/Scripts/sabio.services.organizations.js"></script>
+    <script type="text/javascript">
+
+        //adding isotope function directive, if it works add to sabio.ng.app
+        //sabio.ng.app.module.directive('isoGrid', function () {
+        //    return function (scope, element, attrs) {
+        //        element.isotope({
+        //            itemSelector: '.items'
+        //        });
+        //    };
+        //});
+        
+
+        // service to provide the categories
+        sabio.services.organizationCategoryFactory = function ($baseService) {
+            var aOrganizationObject = sabio.services.category;
+            var newOrganizationCategoryService = $baseService.merge(true, {}, aOrganizationObject, $baseService);//.extend(true, {}, aOrganizationObject, $baseService);
+            return newOrganizationCategoryService;
+        };
+
+        sabio.ng.addService(sabio.ng.app.module
+               , "$organizationCategoryService"
+               , ["$baseService"]
+               , sabio.services.organizationCategoryFactory);
+
+        sabio.services.organizations.Factory = function ($baseService) {
+            var searchObject = sabio.services.organizations;
+            var newService = $baseService.merge(true, {}, searchObject, $baseService);
+            return newService;
+        }
+
+        sabio.ng.addService(sabio.ng.app.module, "$orgSearchService", ["$baseService"], sabio.services.organizations.Factory);
+
+        sabio.page.controllerFactory = function ($scope, $baseController, $orgSearchService, $organizationCategoryService) {
+            var vm = this;
+            vm.items = null;
+            vm.query = null;// this is the form data - all of the form fields will be bound to this using ng-model
+            vm.results = null;
+            vm.orgSearchForm = null;//this is a reference to the actual form in the html       
+            vm.categories = [];
+            
+            
+
+            vm.showFormErrors = false;
+            vm.showDistanceErrors = false;
+            vm.hasError = false;
+            vm.errorList = null;
+            vm.receiveItems = _receiveItems;
+            vm.onError = _onError;
+            vm.searchSubmit = _searchSubmit;
+            vm.category = _category;
+            vm.getCategories = _getCategories;
+            vm.categorySuccess = _categorySuccess;
+            vm.categoryError = _categoryError;
+
+            vm.$organizationCategoryService = $organizationCategoryService;
+            vm.$orgSearchService = $orgSearchService;
+            vm.$scope = $scope;
+
+            $.extend(vm, $baseController);
+            vm.notify = vm.$orgSearchService.getNotifier($scope);
+
+            vm.render = _render;            
+            vm.render();
+            vm.getCategories();
+
+            function _getCategories() {
+                console.log("get categories!");
+                vm.$organizationCategoryService.selectType(2, vm.categorySuccess, vm.categoryError);
+            }
+
+            function _categorySuccess(data, status, xhr) {
+                vm.notify(function () {
+                    vm.categories = data.items;
+                    console.log("vm.categories: ", vm.categories);
+                    vm.categories.unshift({ name: "All", id: 0 });
+
+                });
+            };
+
+            function _categoryError() {
+                console.log("category Error");
+            }
+            
+            function _searchSubmit() {
+                
+                if (vm.query === null) {
+                    console.log("here");
+                    vm.showFormErrors = true;
+                    
+                }
+                else if (vm.query.searchBy != null && !vm.query.distance) {
+                    console.log("distance");
+                    vm.showDistanceErrors = true;
+                }
+                else if (vm.orgSearchForm.$valid) {
+                    vm.showDistanceErrors = false;
+                    vm.showFormErrors = false;
+                    vm.query.category = null;
+                    vm.$orgSearchService.selectGeoList(vm.query, vm.receiveItems, vm.onError);
+                }
+                else {
+                    
+                    console.log("not valid data");
+                }
+                
+            }
+
+            function _receiveItems(data) {
+                if (data.items === null) {
+                    vm.errorList = 'No results found';
+                    vm.hasError = true;
+                    vm.showDistanceErrors = false;
+                    vm.notify(function () {
+                        vm.results = {};
+                    });
+                }
+                else {
+                    vm.hasError = false;
+                    vm.showDistanceErrors = false;
+                    vm.notify(function () {
+                        vm.results = data.items;
+                        console.log("checking what is returned on data.items", vm.results);
+                        console.log("checking how many objects in vm.querylength", vm.results.length);
+                    });
+                }
+                
+            }
+
+            function _onError(jqXhr, error) {
+                if (jqXhr.status === 500) {
+                    vm.hasError = true;
+                    vm.notify(function () {
+                        vm.results = {};
+                        vm.errorList = 'No results are found';
+                        console.log(vm.errorList);
+                    });
+                    
+                }
+                else {
+                    console.log(jqXhr);
+                    vm.hasError = true;
+                    vm.notify(function () {
+                        console.log("error: ", jqXhr.responseJSON);
+                        vm.errorList = jqXhr.responseJSON.errors;
+                        console.log(vm.errorList);
+                    });
+
+                    console.error(jqXhr.responseJSON);
+                }
+            }
+            
+            function _render() {
+                vm.$orgSearchService.selectRandom(vm.receiveItems, vm.onError);
+
+            }
+
+            function _category(category) {
+                if (vm.query != null) {
+                    vm.query.category = category;
+                    console.log(vm.query);
+                    vm.$orgSearchService.selectByCategory(vm.query, vm.receiveItems, vm.onError);
+
+                }
+                else {
+                    vm.query = {};
+                    vm.query.category = category;
+                    console.log(vm.query);
+                    vm.$orgSearchService.selectByCategory(vm.query, vm.receiveItems, vm.onError);
+                }
+            }
+        }
+
+        sabio.ng.addController(sabio.ng.app.module
+            , "orgSearchController"
+            , ['$scope', '$baseController', "$orgSearchService", '$organizationCategoryService']
+            , sabio.page.controllerFactory)
+    </script>
+}
+
