@@ -1,0 +1,95 @@
+using Sabio.Web.Models.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace Sabio.Web.Controllers
+{
+    [RoutePrefix("member")]
+    public class MemberController : BaseController
+    {
+        [Route("edit/{Uid:guid}"), Authorize] 
+        [Route("description"), Authorize]
+        public ActionResult Details(Guid? Uid)
+        {
+            ItemViewModel<Guid?> viewModel = new ItemViewModel<Guid?>();
+            viewModel.Item = Uid;
+            return View(viewModel);
+        }
+
+        [Route("bank"), Authorize]
+        [Route("bankupdate/{getUid:guid}"), Authorize]
+        public ActionResult MemberBank(Guid? getUid)
+        {
+            ItemViewModel<Guid?> viewModel = new ItemViewModel<Guid?>();
+            viewModel.Item = getUid;
+            return View("bankentry", viewModel);
+        }
+
+        [Route("dashboard"), Authorize]
+        public ActionResult Dashboard()
+        {
+            return View();
+        }
+
+        [Route("pay")]
+        [Authorize]
+        public ActionResult Pay()
+        {
+            return View();
+        }
+
+        [Route("profile")]
+        [Authorize]
+        public ActionResult MemberProfilePage()
+        {
+            return View();
+        }
+
+        [Route("cashbackHistory")]
+        [Authorize]
+        public ActionResult CashbackHistory()
+        {
+            return View();
+        }
+
+        [Route("commissions")]
+        [Authorize]
+        public ActionResult Commissions()
+        {
+            return View();
+        }
+
+        [Route("fundraisingEvents")]
+        [Authorize]
+        public ActionResult FundraisingEvents()
+        {
+            return View();
+        }
+
+        [Route("myTeam")]
+        [Authorize]
+        public ActionResult MyTeam()
+        {
+            return View();
+        }
+
+        [Route("upgradeMembership")]
+        [Authorize]
+        public ActionResult UpgradeMembership()
+        {
+            return View();
+        }
+
+        //
+        [Route("financialInfo")]
+        public ActionResult FinancialInfo()
+        {
+            return View();
+        }
+
+
+    }
+}
