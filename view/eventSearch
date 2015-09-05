@@ -1,0 +1,418 @@
+@{
+    ViewBag.Title = "FundraisingEvents";
+    Layout = "~/Views/Shared/_ChipinDashboardLayout.cshtml";
+}
+<style>
+    .wrapper {
+        text-align: left;
+    }
+
+    .btn {     
+        top: 100%;
+    }
+
+    label.geolocate {
+        display: grid !important;
+    }
+</style>
+<!--=================================== START PAGE HEADER ================================================-->
+<!-- Start page header -->
+<div class="header-content">
+    <h2><i class="fa fa-envelope"></i>Fundraising Events <span>Find events &amp; support your community</span></h2>
+    <div class="breadcrumb-wrapper hidden-xs">
+        <span class="label">You are here:</span>
+        <ol class="breadcrumb">
+            <li class="active">Fundraising Events</li>
+        </ol>
+    </div>
+</div><!-- /.header-content -->
+<!--=================================== END PAGE HEADER ================================================-->
+<div class="container" ng-controller="calendarController as eventsCtrl" id="calendar" ng-cloak>
+    <div class="col-sm-8 col-sm-offset-1">
+        <br /><br />
+        <p>This is where we describe what Chipin' is about and how it contributes to the community.  Show how many merchants and organizations we have.</p>
+        <br /><br />
+    </div><!--.col-->
+    <!-- Start input fields-->
+
+    <div class="well col-md-10 col-xs-10 col-md-offset-1">
+        <h2 class="panel-title">Search by:</h2><br />
+        <form role="form" id="searchForm" name="eventsCtrl.searchForm" ng-submit="eventsCtrl.searchSubmit()" novalidate>
+
+            <div class="row form-group">
+                <div class="col-md-5 col-xs-12">
+
+                    <input type="text"
+                           style="background-color: #e6e9ed"
+                           name="merchant"
+                           id="merchant"
+                           class="form-control"
+                           data-ng-model="eventsCtrl.item.merchant"
+                           typeahead="item as item.name for item in eventsCtrl.merOptions | filter:{name:$viewValue}"
+                           placeholder="Merchant Name" />
+                    <label for="merchant"></label>
+                </div>
+                <div class="col-md-5 col-xs-12">
+                    <input type="text"
+                           style="background-color: #e6e9ed"
+                           name="organization"
+                           id="organization"
+                           class="form-control"
+                           data-ng-model="eventsCtrl.item.organization"
+                           typeahead="item as item.name for item in eventsCtrl.orgOptions | filter:{name:$viewValue}"
+                           placeholder="Organization Name" />
+                    <label for="organization"></label>
+                </div>
+                <div class="col-md-2 col-xs-12">
+                    <input type="text"
+                           style="background-color: #e6e9ed"
+                           name="zipCode"
+                           id="zipCode"
+                           class="form-control"
+                           data-ng-model="eventsCtrl.item.zipCode"
+                           placeholder="Zip Code" />
+                    <label for="zipCode"></label>
+                </div>
+            </div>
+
+            @*<input type="checkbox"
+                       name="useGeolocate"
+                       data-ng-model="eventsCtrl.item.geolocate"
+                       ng-change="geolocateChecked(item.geolocate)"
+                       ng-checked="eventsCtrl.isChecked()"
+                       id=" geolocate">
+                <label for="currentLocation" class="geolocate">
+                    Or Use Current Location
+                </label>*@
+            <div class="row">
+                <div class="wrapper col-md-2 col-xs-2">
+                    <button class="btn btn-primary" type="submit" id="btn-submit-search">Search</button>
+                </div>
+                <br />
+                <div class="col-xs-2 col-md-2 col-md-offset-8 col-xs-offset-7">
+                    <button type="reset"
+                            ng-click="eventsCtrl.resetSearchForm()"
+                            name="reset"
+                            value="reset">
+                        Reset
+                    </button>
+                </div>
+            </div><!--.row.form-group-->
+
+            <div id="msgWindow">
+                <div class="col-sm-8 col-sm-offset-3" data-ng-show="eventsCtrl.hasError" style="opacity:1">
+                    <div class="alert text-center ng-class:{'alert-danger': eventsCtrl.hasError}">{{eventsCtrl.msgList}}</div>
+                </div>
+
+                <div class="col-sm-8 col-sm-offset-3" data-ng-show="eventsCtrl.showSearchError" style="opacity:1">
+                    <div class="alert text-center ng-class:{'alert-warning': eventsCtrl.showSearchError}">{{eventsCtrl.msgList}}</div>
+                </div>
+            </div>
+        </form>
+    </div><!--.well-->
+
+    <br />
+    <div class="col-md-10 col-xs-9 col-md-offset-1">
+        <h2 class="text-center">{{eventsCtrl.calendarTitle}}</h2>
+
+        <div class="row">
+
+            <div class="col-md-6 text-center">
+                <div class="btn-group">
+
+                    <button class="btn btn-primary"
+                            mwl-date-modifier
+                            date="eventsCtrl.calendarDay"
+                            decrement="eventsCtrl.calendarView">
+                        Previous
+                    </button>
+                    <button class="btn btn-default"
+                            mwl-date-modifier
+                            date="eventsCtrl.calendarDay"
+                            set-to-today>
+                        Today
+                    </button>
+                    <button class="btn btn-primary"
+                            mwl-date-modifier
+                            date="eventsCtrl.calendarDay"
+                            increment="eventsCtrl.calendarView">
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <br class="visible-xs visible-sm">
+
+            <div class="col-md-6 text-center">
+                <div class="btn-group">
+                    <label class="btn btn-primary" ng-model="eventsCtrl.calendarView" btn-radio="'year'">Year</label>
+                    <label class="btn btn-primary" ng-model="eventsCtrl.calendarView" btn-radio="'month'">Month</label>
+                    <label class="btn btn-primary" ng-model="eventsCtrl.calendarView" btn-radio="'week'">Week</label>
+                    <label class="btn btn-primary" ng-model="eventsCtrl.calendarView" btn-radio="'day'">Day</label>
+                </div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <mwl-calendar events="eventsCtrl.events"
+                      view="eventsCtrl.calendarView"
+                      view-title="eventsCtrl.calendarTitle"
+                      current-day="eventsCtrl.calendarDay"
+                      on-event-click="eventsCtrl.eventClicked(calendarEvent)"
+                      on-event-times-changed="eventsCtrl.eventTimesChanged(calendarEvent); calendarEvent.startsAt = calendarNewEventStart; calendarEvent.endsAt = calendarNewEventEnd"
+                      auto-open="true"
+                      day-view-start="06:00"
+                      day-view-end="22:00"
+                      day-view-split="30"
+                      cell-modifier="eventsCtrl.modifyCell(calendarCell)">
+        </mwl-calendar>
+        <br />
+        <div id="success">
+            <div class="col-sm-8 col-sm-offset-2" data-ng-show="eventsCtrl.hasSuccess" style="opacity:1">
+                <div class="alert text-center ng-class:{'alert-success': eventsCtrl.hasSuccess}"><h3>Fundraising Events</h3></div>
+            </div>
+        </div>
+        <br /><br /><br /><br /><br />
+        <div class="row">
+            <div class="well">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Event Title</th>
+                            <th class="text-center">Location</th>
+                            <th class="text-center">Date Start</th>
+                            <th class="text-center">Date End</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="events in eventsCtrl.events | orderBy: 'startsAt' track by $index" class="text-center">
+                            <td>{{events.title}}</td>
+                            <td>{{events.location}}</td>
+                            <td>{{events.startsAt | date:'MM/dd/yy h:mma'}}</td>
+                            <td>{{events.endsAt | date:'MM/dd/yy h:mma'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div><!--.well-->
+        </div><!--.row-->
+    </div><!--.col-md-10-->
+</div><!--.container-->
+@section Scripts{
+    <script src="~/Scripts/sabio.services.merchant.js"></script>
+    <script src="~/Scripts/sabio.services.organizations.js"></script>
+    <script src="~/Scripts/sabio.services.member.js"></script>
+    <script type="text/javascript">
+        //3 separate factories to call on 3 separate services
+        sabio.services.merchantFactory = function ($baseService) {
+            var aMerchantObject = sabio.services.merchant;
+            var newService = $.extend(true, {}, aMerchantObject, $baseService);
+            return newService;
+        };
+        sabio.ng.addService(sabio.ng.app.module, "$merchantService", ["$baseService"], sabio.services.merchantFactory);
+
+        sabio.services.orgFactory = function ($baseService) {
+            var anOrgObject = sabio.services.organizations;
+            var newService = $.extend(true, {}, anOrgObject, $baseService);
+            return newService;
+        };
+        sabio.ng.addService(sabio.ng.app.module, "$orgService", ["$baseService"], sabio.services.orgFactory);
+
+        sabio.services.memberFactory = function ($baseService) {
+            var aMemberObject = sabio.services.member;
+            var newService = $.extend(true, {}, aMemberObject, $baseService);
+            return newService;
+        };
+        sabio.ng.addService(sabio.ng.app.module, "$memberService", ["$baseService"], sabio.services.memberFactory);
+
+        //page controller
+        sabio.page.calendarControllerFactory = function ($scope
+                  , $baseController
+                  , $merchantService
+                  , $orgService
+                  , $memberService
+                  , moment
+                  , $anchorScroll
+                  , $location
+                  ) {
+            var vm = this;
+
+            vm.calendarView = 'month';
+            vm.calendarDay = new Date();
+
+            //simulate inheritance
+            $.extend(vm, $baseController);
+
+            //attach injected dependencies
+            vm.$merchantService = $merchantService;
+            vm.$orgService = $orgService;
+            vm.$memberService = $memberService;
+            vm.$anchorScroll = $anchorScroll;
+            vm.$location = $location;
+            vm.$scope = $scope;
+
+            //Wrapper for small dependency on scope
+            vm.notify = vm.$orgService.getNotifier($scope);
+
+            //references
+            vm.events = [];
+            vm.eventSource = {
+                currentTimezone: 'UTC' // an option!
+            };
+            vm.item = null;  //this is a reference to the item in typeahead
+            vm.items = null;
+            vm.location = null;
+            //reference to the actual form in the html
+            vm.searchForm = null;
+
+            //Message list that will display after search is executed
+            vm.hasSuccess = false;
+            vm.hasError = false;
+            vm.msgList = [];
+            vm.showSearchErrors = false;
+            // vm.geolocate = false;
+
+
+            //initializing array for typeahead feature
+            vm.merOptions = [];
+            vm.orgOptions = [];
+
+            //repositioning screen after submitting
+            vm.$anchorScroll.yOffset = 100;
+            vm.$location.hash('#');
+
+            //Providing references for handlers
+            vm.memberSuccess = _memberSuccess;
+            vm.receiveItem = _receiveItem;
+            vm.onError = _onError;
+            vm.searchSubmit = _searchSubmit;
+            vm.onMerchantSuccess = _onMerchantSuccess;
+            vm.onOrganizationSuccess = _onOrganizationSuccess;
+            vm.onOptionError = _onOptionError;
+            vm.onSearchError = _onSearchError;
+            vm.resetSearchForm = _resetSearchForm;
+
+            //invoking the fx
+            render();
+
+            function render() {
+                vm.$memberService.selectData(vm.memberSuccess, vm.onError);
+
+                //invoking these services will populate the typeahead feature
+                vm.$merchantService.adminSelect(vm.onMerchantSuccess, vm.onOptionError);
+                vm.$orgService.selectAll(vm.onOrganizationSuccess, vm.onOptionError);
+            }
+
+            function _memberSuccess(data) {
+                var item = data.item;
+                console.log("memberSuccess's data.item", data.item);
+            }
+
+            //success handler populates typeahead feature for merchant
+            function _onMerchantSuccess(data) {
+                vm.notify(function () {
+                    vm.merOptions = data.items;
+                });
+                console.log("list merOptions: ", vm.merOptions);
+            }
+            //success handler populates typeahead feature for organization
+            function _onOrganizationSuccess(data) {
+                vm.notify(function () {
+                    vm.orgOptions = data.items;
+                });
+                console.log("list org options: ", vm.orgOptions)
+            }
+            //error handler for typeahead feature
+            function _onOptionError(jqXhr, error) {
+                console.log(jqXhr.responseText);
+            }
+            //handler for receiving search results data and populates it into the table
+            function _receiveItem(data) {
+                console.log("this is the data: ", data.items);
+                if (data.items == null) {
+                    console.log("data is null");
+                }
+                else if (data.items !== null) {
+                    var eventList = [];
+                    for (var i = 0; i < data.items.length; i++) {
+                        eventList.push({
+                            title: data.items[i].title,
+                            location: data.items[i].location,
+                            startsAt: new Date(data.items[i].start),
+                            endsAt: new Date(data.items[i].end)
+                        })
+                    }
+                    vm.notify(function () {
+                        vm.events = eventList;
+                        console.log("this is what's inside vm.events", vm.events);
+                        vm.hasSuccess = true;
+                        vm.$location.hash('success');
+                        console.log("this is the msg list:", vm.msgList);
+                    });
+                }
+            }
+            //handler for search error
+            function _onError(jqXhr, error) {
+                console.log("error:", jqXhr, responseText);
+            }
+            //handler to initiate search on click
+            function _searchSubmit() {
+                console.log("SearchSubmit ")
+                if (vm.item.merchant != null && vm.item.organization == null && vm.item.zipCode == null) {
+                    console.log("merchant submit fired and this is the id: ", vm.item.merchant.id);
+                    vm.$merchantService.findConfirmedEvents(vm.item.merchant.id, vm.receiveItem, vm.onSearchError);
+                }
+                else if (vm.item.organization != null && vm.item.merchant == null && vm.item.zipCode == null) {
+                    console.log("organization submit fired and this is the id: ", vm.item.organization.id);
+                    vm.$orgService.findOrgEvents(vm.item.organization.id, vm.receiveItem, vm.onSearchError);
+                }
+                else if (vm.item.zipCode != null && vm.item.organization == null && vm.item.merchant == null) {
+                    console.log("zipCode submit fired");
+                    vm.$merchantService.confirmedEventsNearby(vm.item, vm.receiveItem, vm.onSearchError);
+                    console.log("vm.item:", vm.item);
+                }
+                else if (vm.item.geolocate != null) {
+                    console.log('is checked ran');
+                }
+                else {
+                    vm.notify(function () {
+                        vm.showSearchError = true;
+                        vm.msgList = [];
+                        vm.msgList.push("Did you enter a search criteria?")
+                        vm.$anchorScroll.yOffset = 100;
+                        vm.$location.hash('msgWindow');
+                    })
+                }
+            }
+            function _resetSearchForm() {
+                console.log("reset form");
+
+                vm.item = null;
+                vm.searchForm.$setPristine();
+                vm.searchForm.$setUntouched();
+                vm.hasError = false;
+            }
+            //alert messages handlers
+            function _onSearchError(data, jqXhr, error) {
+                vm.notify(function () {
+                    vm.hasError = true;
+                    vm.msgList = [];
+                    console.log("this is the data", data);
+                    vm.msgList.push(data.responseJSON.errors[0]);
+                });
+            }
+        }
+        sabio.ng.addController(sabio.ng.app.module, "calendarController"
+            , ['$scope'
+            , '$baseController'
+            , '$merchantService'
+            , '$orgService'
+            , '$memberService'
+            , 'moment'
+            , '$anchorScroll'
+            , '$location']
+            , sabio.page.calendarControllerFactory)
+
+    </script>
+}
