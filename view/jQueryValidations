@@ -1,0 +1,366 @@
+        sabio.page.startUp = function () {
+            sabio.page.creditId = $("#modelItem").val();
+            console.log(sabio.page.creditId);
+
+            // call a function that checks if there is an existing id and sends ajax call if there is
+            sabio.page.getCreditData();
+
+            //  call a separate function to set up validation rules
+            sabio.page.initializeAddressValidation();
+
+            //  attach a click handler to the addressform's submit button
+            $("#submitInfo").on("click", sabio.page.handlers.addressForm);
+
+            //  call a separate function to set up bank form's validation rules
+            sabio.page.initializeBankValidation();
+
+            //  attach a click handler to the bank form's submit button
+            $("#submitBankInfo").on("click", sabio.page.handlers.bankForm);
+
+            //  call a separate function to set up credit card form's validation rules
+            sabio.page.initializeCreditCardValidation();
+
+            //  attach a click handler to the credit card form's submit button
+            $("#submitCreditCardInfo").on("click", sabio.page.handlers.creditCardDetailsForm);
+
+        };
+
+        //this function checks if there is an existing id and sends an ajax call to select data from the db
+        sabio.page.getCreditData = function () {
+
+            if (sabio.page.creditId && sabio.page.creditId.length > 0) {
+                console.log("There is an existing Uid.")
+                var myData = null;
+                sabio.services.creditCard.select(sabio.page.creditId, sabio.page.getCreditCardData, sabio.page.creditCardError);
+                console.log("Selection ajax call was successful.");
+            }
+        }
+            //this function populates the fields with their respective ids by getting each item from the Json object returned by server
+            sabio.page.getCreditCardData = function (data, status, xhr) {
+
+                sabio.page.returnCreditData = data.item;
+                $("#cardholderName").val(sabio.page.returnCreditData.cardholderName);
+                $("#creditCardNumber").val(sabio.page.returnCreditData.creditCardNumber);
+                $("#expiryMonth").val(sabio.page.returnCreditData.expiryMonth);
+                $("#expiryYear").val(sabio.page.returnCreditData.expiryYear);
+                $("#securityCode").val(sabio.page.returnCreditData.securityCode);
+                console.log("It selected data as follows...", data.item);
+            }
+
+            ///*This function will be called by $ when the ajax request's response is NOT received as successful.
+            sabio.page.creditCardError = function (jqXHR, textStatus, errorThrown) {
+                $("#msgWindow").addClass("alert-danger");
+                $("#msgWindow").removeClass("alert-info");
+            }
+
+            sabio.page.initializeAddressValidation = function () //BEGIN ADDRESS VALIDATION
+            {
+                //  set defaults for the entire plugin
+                jQuery.validator.setDefaults({
+                    debug: true,
+                    success: "valid"
+                });
+
+                //  set rules and error messages for address form (use the form id)
+                $("#addressForm").validate({
+                    rules: {
+                        "address1": {
+                            required: true  //  address1 is required, use the name attribute
+                        },
+                        "city": {
+                            required: true
+                        },
+                        "state": {
+                            required: true
+                        },
+                        "zipCode": {
+                            required: true,
+                            minlength: 5,
+                            maxlength: 5
+                        },
+                        "phone1": {
+                            required: true,
+                            minlength: 3,
+                            maxlength: 3
+                        },
+                        "phone2": {
+                            required: true,
+                            minlength: 3,
+                            maxlength: 3
+                        },
+                        "phone3": {
+                            required: true,
+                            minlength: 4,
+                            maxlength: 4
+                        },
+                        "website": {
+                            required: true,
+                            url: true
+                        },
+
+                    },
+
+                    //  here you can provide custom error messages if you want to - this part is optional
+                    messages: {
+                        "address1": {
+                            required: "Address is required.",
+                        },
+                        "city": {
+                            required: "City is required.",
+                        },
+                        "zipCode": {
+                            required: "Postal code is required.",
+                        },
+                        "website": {
+                            required: "Website address is required.",
+                            url: "Please enter a valid website address.",
+                        }
+                    }
+                });
+            };
+
+            sabio.page.handlers.addressForm = function () {
+                //  this line checks the data from the form against the rules defined on startUp.
+                if ($("#addressForm").valid()) {
+                    //  the form is valid: submit the form via ajax here
+                    var url = "/api/organization/address";
+                    var myData = $("#addressForm").serialize();
+                    var settings = {
+                        cache: false
+                        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+                        , data: myData
+                        , dataType: "json"
+                        , success: sabio.page.AdressSuccess
+                        , error: sabio.page.AdressError
+                        , type: "POST"
+                    };
+                    $.ajax(url, settings);
+
+                    console.log("success, data is valid");
+                }
+                else {
+                    //  the form is NOT valid. in most cases you don't need to do anything here since calling .valid()
+                    //  also displays the error messages directly in your form html.
+                    console.log("failed validation process");
+                }
+            };
+
+            /*This function will be called by $ when the ajax
+                request's response is received as succesful.
+                A successul response has a HTTP_STATUS Code of 200
+            */
+            sabio.page.AdressSuccess = function (data, status, xhr) {
+                console.log(JSON.stringify(data));
+                $("#msgWindow").removeClass("alert-danger");
+                $("#msgWindow").addClass("alert-info");
+
+                /*if statement to check if user has an existing id*/
+            }
+
+            /*This function will be called by $ when the ajax
+                request's response is NOT received as successful.
+               This has a HTTP_STATUS Code of something OTHER than 200
+            */
+            sabio.page.AdressError = function (jqXHR, textStatus, errorThrown) {
+                $("#msgWindow").addClass("alert-danger");
+                $("#msgWindow").removeClass("alert-info");
+            }
+
+            //END ADDRESS VALIDATION
+
+            //BEGIN BANK VALIDATION
+
+            sabio.page.initializeBankValidation = function () {
+                //  set defaults for the entire plugin
+                jQuery.validator.setDefaults({
+                    debug: true,
+                    success: "valid"
+                });
+
+                //  set rules and error messages for bank form (use form id)
+                $("#bankDetailsForm").validate({
+                    rules: {
+                        "bankName": {
+                            required: true  //  address1 is required, use the name attr
+                        },
+                        "routingNumber": {
+                            required: true,
+                            minlength: 9,
+                            maxlength: 9
+                        },
+                        "accountNumber": {
+                            required: true,
+                            rangelength: [7, 19]
+                        },
+                    },
+
+                    //  here you can provide custom error messages if you want to - this part is optional
+                    messages: {
+                        "bankName": {
+                            required: "Bank's name is required.",
+                        },
+                        "routingNumber": {
+                            required: "Routing number is required.",
+                            minlength: "Routing number is too short.",
+                            maxlength: "Routing number is too long.",
+
+                        },
+                        "accountNumber": {
+                            required: "Account number is required.",
+                            rangelength: "Please enter a number that has between 7 and 19 digits."
+                        },
+                    }
+                });
+            };
+
+            sabio.page.handlers.bankForm = function () {
+                //  this line checks the data from the form against the rules defined on startUp.
+                if ($("#bankDetailsForm").valid()) {
+                    //  the form is valid: submit the form via ajax here
+                    var url = "/api/organization/bank";
+                    var myData = $("#bankDetailsForm").serialize();
+                    var settings = {
+                        cache: false
+                        , contentType: "application/x-www-form-urlencoded; charset=UTF-8"
+                        , data: myData
+                        , dataType: "json"
+                        , success: sabio.page.BankSuccess
+                        , error: sabio.page.BankError
+                        , type: "POST"
+                    };
+                    $.ajax(url, settings);
+
+                    console.log("success, data is valid");
+                }
+                else {
+                    //  the form is NOT valid. in most cases you don't need to do anything here since calling .valid()
+                    //  also displays the error messages directly in your form html.
+                    console.log("failed validation process");
+                }
+            };
+
+            /*This function will be called by $ when the ajax
+                request's response is received as succesful.
+                A successul response has a HTTP_STATUS Code of 200
+            */
+            sabio.page.BankSuccess = function (data, status, xhr) {
+                console.log(JSON.stringify(data));
+                $("#msgWindow").removeClass("alert-danger");
+                $("#msgWindow").addClass("alert-info");
+            }
+
+            /*This function will be called by $ when the ajax
+                request's response is NOT received as successful.
+               This has a HTTP_STATUS Code of something OTHER than 200
+            */
+            sabio.page.BankError = function (jqXHR, textStatus, errorThrown) {
+                $("#msgWindow").addClass("alert-danger");
+                $("#msgWindow").removeClass("alert-info");
+            }
+
+            //END BANK VALIDATION
+
+ //      BEGIN CREDIT CARD VALIDATION
+            sabio.page.initializeCreditCardValidation = function () {
+                //  set defaults for the entire plugin
+                jQuery.validator.setDefaults({
+                    debug: true,
+                    success: "valid"
+                });
+
+                //  set rules and error messages for form (use form id)
+                $("#creditCardDetailsForm").validate({
+                    rules: {
+                        "cardholderName": {
+                            required: true  //  Cardholder's name is required, use the name attr
+                        },
+                        "creditCardNumber": {
+                            required: true,
+                            creditcard: true
+                        },
+                        "securityCode": {
+                            required: true,
+                            rangelength: [3, 4]
+                        },
+                        "expiryMonth": {
+                            required: true
+
+                        },
+                        "expiryYear": {
+                            required: true
+                        }
+                    },
+
+                    //  provide custom error messages 
+                    messages: {
+                        "cardholderName": {
+                            required: "Cardholder's name is required.",
+                        },
+                        "creditCardNumber": {
+                            required: "Credit card number is required.",
+                        },
+                        "securityCode": {
+                            required: "Please enter your card verification code.",
+                            number: "Please enter a valid card verification code.",
+                            rangelength: "Card verification code should be 3 or 4 digits long.",
+                        },
+                        "expiryMonth": {
+                            required: "Please select a month.",
+                        },
+                        "expiryYear": {
+                            required: "Please select year.",
+                        },
+                    }
+                });
+            };
+
+            sabio.page.handlers.creditCardDetailsForm = function () {
+
+                //  this line checks the data from the form against the rules defined on startUp.
+                if ($("#creditCardDetailsForm").valid()) {
+                
+                    //add another if statement in case the Uid was already there, then it needs to update.
+                    if (sabio.page.creditId && sabio.page.creditId.length > 0) {
+                        console.log("Checking my sabio.page.creditId ", sabio.page.creditId)
+                        var myData = $("#creditCardDetailsForm").serialize();
+                        sabio.services.creditCard.update(sabio.page.creditId, myData, sabio.page.creditCardUpdateSuccess, sabio.page.creditCardError);
+                        console.log("Update was successful");
+                    }
+
+                    else {
+                        //  the form is valid and there isn't an existing unique id: submit the form via ajax here
+                        var myData = $("#creditCardDetailsForm").serialize();
+                        //invoking the function in the sabio.services.creditCard.js file
+                        sabio.services.creditCard.create(myData, sabio.page.creditCardSuccess, sabio.page.creditCardError);
+                        console.log("success, data is valid");
+                    }
+                }
+                else {
+                    console.log("failed validation process");
+                }
+            };
+
+                sabio.page.creditCardUpdateSuccess = function (data, status, xhr) {
+                    console.log("credit card success", data.item);
+                    $("#msgWindow").removeClass("alert-danger");
+                    $("#msgWindow").addClass("alert-info");
+
+                    console.log("It updated. True or false?", data.item, "and data", data);//on the update it returns a bool
+                }
+
+                sabio.page.creditCardSuccess = function (data, status, xhr) {
+                    console.log(JSON.stringify(data));
+                    $("#msgWindow").removeClass("alert-danger");
+                    $("#msgWindow").addClass("alert-info");
+                    $("#successWindow").removeClass("hidden");
+                    console.log("This is my id", data.item);
+                    sabio.page.creditId = data.item;//stored in the namespace the data.item (unique identifier)returned from server
+                }
+                
+                sabio.page.creditCardError = function (jqXHR, textStatus, errorThrown) {
+                    $("#msgWindow").addClass("alert-danger");
+                    $("#msgWindow").removeClass("alert-info");
+                }
+
+     //   END CREDIT CARD VALIDATION
+    </script>
