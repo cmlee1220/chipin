@@ -362,18 +362,13 @@
     <script src="~/Scripts/sabio.services.creditCard.js"></script>
     <script type="text/javascript">
 
-        // declared the variable and set them to null
-        // sabio.page.creditId = null;
-        // sabio.page.returnCreditData = null;
+ 
 
         //  this factory method will be executed once by Angular whenever the code needs to access this particular service
-        //this object is coming from sabio.services.creditCard.js file
         sabio.services.creditCard.ccFactory = function ($baseService) {
 
             var creditCardObject = sabio.services.creditCard;
-
             var newService = $.extend(true, {}, creditCardObject, $baseService); //combine the credit card service object with the base service so that Angular knows how to talk to it
-
             return newService;
         }
 
