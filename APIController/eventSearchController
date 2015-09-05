@@ -1,0 +1,114 @@
+using Sabio.Web.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using Sabio.Web.Services;
+using Sabio.Web.Models.Responses;
+using Sabio.Web.Domain;
+using Sabio.Web.Models.Requests;
+using Sabio.Web.Enums;
+using System.IO;
+using System.Web;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Sabio.Web.Services.Interfaces;
+
+namespace Sabio.Web.Controllers.Api
+{
+    [RoutePrefix("api/events")]
+    public class EventsApiController : BaseApiController
+    {         
+        private IMerchantService _merchantService;
+    //  create a private property to attach the service when it is injected - just like angular
+        private IEventService _eventService;
+        private IOrganizationsService _organizationsService;
+        private IMessagingService _messagingService;
+        private ILocationService _locationService;
+
+    //  we tell Unity to give us an instance of IRequestTokenService by putting it here in the constructor signature
+    //  Unity knows which service to give us (in this case RequestTokenService) because we tell it in App_Start/UnityConfig.cs
+        public EventsApiController(IEventService eventService, IMerchantService MerchantService, IOrganizationsService organizationsService, IMessagingService MessagingService, ILocationService locationService)
+        {
+            _eventService = eventService;
+            _merchantService = MerchantService;
+            _organizationsService = organizationsService;
+            _messagingService = MessagingService;
+            _locationService = locationService;
+        }
+        
+             [Route("merchant/confirmed/{merchantId:int}"), HttpGet]
+        public HttpResponseMessage GetConfirmedMerchantEvents(int merchantId)
+        {
+            List<EventDetails> merchantConfirmedEvents = _eventService.GetConfirmedMerchantEvents(merchantId);
+            ItemsResponse<EventDetails> responseModel = new ItemsResponse<EventDetails>();
+            if (merchantConfirmedEvents != null)
+            {
+                responseModel.Items = merchantConfirmedEvents;
+                return Request.CreateResponse(HttpStatusCode.OK, responseModel);
+            }
+            else
+            {
+                ErrorResponse noEvents = new ErrorResponse("We couldn't find any events. Check the name and try again.");
+                return Request.CreateResponse(HttpStatusCode.BadRequest, noEvents);
+            }
+        }
+        
+            [Route("org/{orgId:int}"), HttpGet]
+        public HttpResponseMessage GetConfirmedEventsByOrgId(int orgId)
+        {
+            List<EventDetails> organizationEvents = _eventService.GetConfirmedEventsByOrgId(orgId);
+            ItemsResponse<EventDetails> responseModel = new ItemsResponse<EventDetails>();
+            responseModel.Items = organizationEvents;
+            if (organizationEvents != null)
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, responseModel);
+            }else
+            {
+                ErrorResponse noEvents = new ErrorResponse("We couldn't find any events. Check the name and try again.");
+                return Request.CreateResponse(HttpStatusCode.BadRequest, noEvents);
+            }
+        }
+        
+        
+          [Route("merchant/local"), HttpGet]
+        public HttpResponseMessage GetLocalEvents([FromUri] LocationSearchRequest model)
+        {
+            if (model == null)
+            {
+                return Request.CreateResponse(HttpStatusCode.BadRequest, model);
+            }
+            else
+            {
+                string modelString = model.ZipCode;
+                //search by zip
+                if (modelString.Length <= 5 && modelString.All(char.IsDigit))
+                {
+                    Location coordinates = _locationService.GetLatLngZip(modelString);
+                    List<EventDetails> confirmedLocalEvents = _eventService.ListLocalEvents(coordinates);
+                    ItemsResponse<EventDetails> responseModel = new ItemsResponse<EventDetails>();
+
+                    if (confirmedLocalEvents != null)
+                    {
+                        responseModel.Items = confirmedLocalEvents;
+                        return Request.CreateResponse(HttpStatusCode.OK, responseModel);
+                    }
+                    else
+                    {
+                        ErrorResponse noEvents = new ErrorResponse("We couldn't find any events within a 25 miles radius. Check the zip code and try again.");
+                        return Request.CreateResponse(HttpStatusCode.BadRequest, noEvents);
+                    }
+                }
+                else
+                {
+                    ErrorResponse badInput = new ErrorResponse("Invalid zip code. Try again.");
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, badInput);
+                }
+
+            }
+        }
+        
+        
+        
