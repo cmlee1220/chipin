@@ -1,0 +1,87 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data;
+using System.Data.SqlClient;
+using Sabio.Data;
+using Sabio.Web.Models.Requests;
+using Sabio.Web.Domain;
+using Sabio.Web.Enums;
+using Sabio.Web.Models.Responses;
+using Sabio.Web.Models;
+using Sabio.Web.Services.Interfaces;
+
+namespace Sabio.Web.Services
+{
+    public class MerchantService : BaseService, IMerchantService
+    {
+
+        private ILocationService _locationService;
+        private IAddressService  _addressService;
+
+        public MerchantService(ILocationService locationService, IAddressService addressService)
+        {
+            _locationService = locationService;
+            _addressService = addressService;
+        }
+
+
+  public Guid UpdateDescription (DescriptionModel model, Guid newId)
+        { 
+             DataProvider.ExecuteNonQuery(GetConnection, "dbo.Description_Update"
+               , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+               {
+                   paramCollection.AddWithValue("@Uid", newId);
+                   paramCollection.AddWithValue("@Description", model.Description);
+               }, returnParameters: delegate(SqlParameterCollection param)
+               {
+                   //remove the statement from the initial service.
+               });
+
+            return newId;
+        }
+        
+          public Guid UpdateMerchantInfo(MerchantAdditionalInfoModel model, Guid newId)
+        {
+            Guid uid = Guid.Empty;
+
+            CreateAddressModel addressModel = new CreateAddressModel();
+            addressModel.Address1 = model.Address;
+            addressModel.City = model.City;
+            addressModel.Zip = model.Zip;
+            addressModel.StateProvinceId = model.StateProvinceId;
+            addressModel.Latitude = model.Latitude;
+            addressModel.Longitude = model.Longitude;
+            int addressId = _addressService.GetMerchantAddressId(newId);
+            _addressService.UpdateAddresses(addressModel, addressId);
+
+            DataProvider.ExecuteNonQuery(GetConnection, "dbo.Merchant_Update"
+               , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+               {
+
+                   paramCollection.AddWithValue("@Uid", newId);//Now we are providing the Uid from the database, it is no longer
+                   //an output.  So the first three lines of the initial service are no longer needed and are restructured
+
+                   paramCollection.AddWithValue("@Name", model.Name);
+                   paramCollection.AddWithValue("@TitlePosition", model.TitlePosition);
+                   paramCollection.AddWithValue("@ContactName", model.ContactName);
+                   paramCollection.AddWithValue("@ContactLastName", model.ContactLastName);                  
+                   paramCollection.AddWithValue("@Phone", model.Phone);
+                   paramCollection.AddWithValue("@Hours", model.Hours);
+                   paramCollection.AddWithValue("@Url", model.url);
+                   paramCollection.AddWithValue("@Discount", model.Discount);                  
+                   paramCollection.AddWithValue("@SubscriptionId", 77);
+                   paramCollection.AddWithValue("@Description", model.Description);
+                   paramCollection.AddWithValue("@ContactPhone", model.ContactPhone);
+
+
+
+               }, returnParameters: delegate(SqlParameterCollection param)
+               {
+                   //remove the statement from the initial service.
+               });
+
+
+            return uid;
+        }
