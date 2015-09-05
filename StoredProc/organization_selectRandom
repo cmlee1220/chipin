@@ -1,0 +1,61 @@
+USE [C09]
+GO
+/****** Object:  StoredProcedure [dbo].[Organizations_SelectRandom]    Script Date: 9/4/2015 10:33:23 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER proc [dbo].[Organizations_SelectRandom]
+
+as
+BEGIN
+
+SELECT TOP 30 percent
+	 o.Id
+	, o.Uid
+	, o.Created
+	, o.Name
+	, o.ContactName
+	, o.Phone
+	, o.AddressId
+	, o.Url
+	, o.Slug
+	, o.ExternalCustomerId
+	, o.SubscriptionId
+	/* added MediaId */ 
+	, a.Id
+	, a.Created
+	, a.Address1
+	, a.Address2
+	, a.City
+	, s.[StateProvinceCode]
+	, a.Zip
+	, a.Country
+	, a.Latitude
+	, a.Longitude
+	/* media start here */
+	, m.Id
+	, m.Path
+	, m.Created
+	, m.MediaType
+	, m.UserType
+	, m.Description
+	, m.Title
+	, m.ContentType 
+
+FROM dbo.Organizations o
+LEFT outer JOIN dbo.Addresses a ON o.AddressID = a.ID
+
+LEFT JOIN [dbo].StateProvince s on a.StateProvinceId = s.StateProvinceId
+
+LEFT OUTER JOIN dbo.Medias m ON o.MediaId = m.ID
+
+ORDER BY newid();
+
+END
+
+/*   
+
+exec [dbo].[Organizations_SelectRandom] 
+
+*/
