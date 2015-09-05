@@ -1,0 +1,489 @@
+@model Sabio.Web.Models.ViewModels.ItemViewModel<Guid?>
+@{
+    ViewBag.Title = "Additional Information";
+    Layout = "~/Views/Shared/_ChipinLayout.cshtml";
+}
+
+<!-- -------------------------------------BEGIN ADDITIONAL INFORMATION SECTION ----------------------------------------------- -->
+
+<section id="detailsForm">
+
+    <div class="container">
+        <h2>@ViewBag.Additional Information</h2>
+
+        <h4>ORGANIZATION INFORMATION</h4>
+        <h5>ADDRESS</h5>
+
+        <form id="addressForm" class="forms" action="#" method="post">
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="text" id="address1" name="address1" class="form-control" placeholder="ADDRESS1"><label for="address1"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="text" id="address2" name="address2" class="form-control" placeholder="ADDRESS2"><label for="address2"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <div class="row">
+                <div class="col-sm-3">
+                    <input type="text" id="city" name="city" class="form-control" placeholder="CITY"><label for="city"></label>
+                </div><!-- /.col -->
+                <div class="col-xs-1">
+                    <select class="form-control" name="state" id="state" placeholder="STATE">
+                        <option value=""></option>
+                        <option value="AL">AL</option>
+                        <option value="AK">AK</option>
+                        <option value="AZ">AZ</option>
+                        <option value="AR">AR</option>
+                        <option value="CA">CA</option>
+                        <option value="CO">CO</option>
+                        <option value="CT">CT</option>
+                        <option value="DE">DE</option>
+                        <option value="DC">DC</option>
+                        <option value="FL">FL</option>
+                        <option value="GA">GA</option>
+                        <option value="HI">HI</option>
+                        <option value="ID">ID</option>
+                        <option value="IL">IL</option>
+                        <option value="IN">IN</option>
+                        <option value="IA">IA</option>
+                        <option value="KS">KS</option>
+                        <option value="KY">KY</option>
+                        <option value="LA">LA</option>
+                        <option value="ME">ME</option>
+                        <option value="MD">MD</option>
+                        <option value="MA">MA</option>
+                        <option value="MI">MI</option>
+                        <option value="MN">MN</option>
+                        <option value="MS">MS</option>
+                        <option value="MO">MO</option>
+                        <option value="MT">MT</option>
+                        <option value="NE">NE</option>
+                        <option value="NV">NV</option>
+                        <option value="NH">NH</option>
+                        <option value="NJ">NJ</option>
+                        <option value="NM">NM</option>
+                        <option value="NY">NY</option>
+                        <option value="NC">NC</option>
+                        <option value="ND">ND</option>
+                        <option value="OH">OH</option>
+                        <option value="OK">OK</option>
+                        <option value="OR">OR</option>
+                        <option value="PA">PA</option>
+                        <option value="RI">RI</option>
+                        <option value="SC">SC</option>
+                        <option value="SD">SD</option>
+                        <option value="TN">TN</option>
+                        <option value="TX">TX</option>
+                        <option value="UT">UT</option>
+                        <option value="VT">VT</option>
+                        <option value="VA">VA</option>
+                        <option value="WA">WA</option>
+                        <option value="WV">WV</option>
+                        <option value="WI">WI</option>
+                        <option value="WY">WY</option>
+                    </select>
+                </div><!-- /.col -->
+                <div class="col-xs-2">
+                    <input type="text" id="zipCode" name="zipCode" class="form-control" placeholder="ZIP CODE"><label for="zipCode"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <h5>PHONE NUMBER</h5>
+            <div class="row">
+                <div class="col-xs-1">
+                    <input type="text" id="phone1" name="phone1" class="form-control" placeholder="TEL"><label for="phone1"></label>
+                </div><!-- /.col -->
+                <div class="col-xs-1">
+                    <input type="text" id="phone2" name="phone2" class="form-control"><label for="phone2"></label>
+                </div><!-- /.col -->
+                <div class="col-xs-1">
+                    <input type="text" id="phone3" name="phone3" class="form-control"><label for="phone3"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <h5>WEBSITE</h5>
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="url" id="website" name="website" class="form-control" placeholder="WEBSITE (Must begin with http://)"><label for="website"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <h5>REPLICATED SITE</h5>
+            <div class="formGroup">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p class="text">http://chipinworld.com/</p>
+                        <input type="text" id="replicatedSite" name="replicatedSite" class="form-control"><label for="replicatedSite"></label>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.formGroup-->
+
+            <div class="row">
+                <div class="col-sm-2">
+                    <button type="submit" id="submitInfo" class="btn btn-default btn-submit">Next</button>
+                </div><label for="submitInfo"></label>
+            </div>
+        </form>
+    </div>
+</section>
+<!-- -------------------------------------END OF ADDITIONAL INFORMATION SECTION ----------------------------------------------- -->
+<!-- --------------------------------------- BEGIN BANK INFORMATION ----------------------------------------------------------- -->
+<section id="bankForm">
+    <div class="container">
+        <h2>Additional Information</h2>
+
+        <h4>ACCOUNT INFO</h4> <!-- NEED PROGRESS BAR HERE-->
+
+        <div class="radio">
+            <!-- BEGIN RADIO BUTTON -->
+            <div class="row">
+                <div class="col-xs-1"><input value="1" type="radio" name="bankInformation"></div>
+                <div class="col-xs-5"><label for="bankInformation">Bank Information</label></div>
+            </div><!--.row-->
+
+            <div class="row">
+                <div class="col-xs-1"><input value="2" type="radio" name="creditCardInfo"></div>
+                <div class="col-xs-5"><label for="creditCardInfo">Credit Card Information</label></div>
+            </div><!--.row-->
+        </div><!-- END RADIO BUTTON -->
+
+
+        <form id="bankDetailsForm" class="forms" action="#" method="post">
+            <h5>NAME OF BANK</h5>
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="text" id="bankName" name="bankName" class="form-control" placeholder="BANK NAME"><label for="bankName"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <h5>ROUTING NUMBER</h5>
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="text" id="routingNumber" name="routingNumber" class="form-control" placeholder="ROUTING NUMBER"><label for="routingNumber"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <h5>ACCOUNT NUMBER</h5>
+            <div class="row">
+                <div class="col-sm-6">
+                    <input type="text" id="accountNumber" name="accountNumber" class="form-control" placeholder="ACCOUNT NUMBER"><label for="accountNumber"></label>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+
+            <div class="row">
+                <div class="col-sm-2">
+                    <button type="submit" id="submitBankInfo" class="btn btn-default btn-submit">Submit</button><label for="submitBankInfo"></label>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- --------------------------------------- END BANK INFORMATION ----------------------------------------------------------- -->
+<!-- --------------------------------------- BEGIN CREDIT CARD INFORMATION ----------------------------------------------------------- -->
+
+<section id="creditCardDetailsForm">
+    <div class="panel-body" data-ng-controller="creditCardController as dashboard" id="creditCardCtrler">
+        <div class="container">
+            <h2>Additional Information</h2>
+
+            <h3>ACCOUNT INFO</h3>
+
+            <div class="radio">
+                <!-- BEGIN RADIO BUTTON -->
+                <div class="row">
+                    <div class="col-xs-1"><input value="1" type="radio" name="bankInformation"></div>
+                    <div class="col-xs-5"><label for="bankInformation">Bank Information</label></div>
+                </div><!--.row-->
+
+                <div class="row">
+                    <div class="col-xs-1"><input value="2" type="radio" name="creditCardInfo"></div>
+                    <div class="col-xs-5"><label for="creditCardInfo">Credit Card Information</label></div>
+                </div><!--.row-->
+            </div><!-- END RADIO BUTTON -->
+            @*Angular Form*@
+
+            <form id="creditCardDetailsForm" name="dashboard.creditCardDetailsForm" ng-submit="dashboard.addCreditCard()" novalidate>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <h5>CARDHOLDER NAME</h5>
+                        <input type="text" class="form-control
+                                   ng-class:{'error':dashboard.showNewCardErrors && !dashboard.creditcarddetailsform.cardholderName.$valid}"
+                               placeholder="Cardholder Name"
+                               name="cardholderName"
+                               id="cardholderName"
+                               data-ng-model="dashboard.creditCardData.cardholderName"
+                               ng-minlength="2"
+                               required />
+                        <div role="alert" class="help-inline error">
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.cardholderName.$error.required">This field is required.</label>
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.cardholderName.$error.minlength">Name must be at least 2 characters.</label>
+                        </div>
+                    </div>
+                </div><!--row-->
+                <div class="row">
+                    <div class="form-group col-md-4">
+                        <h5>CREDIT CARD NUMBER</h5>
+                        <input type="text" class="form-control ng-class:{'error':dashboard.showNewCardErrors && !dashboard.creditCardDetailsForm.creditCardNumber.$valid}"
+                               placeholder="Credit Card Number"
+                               name="creditCardNumber"
+                               id="creditCardNumber"
+                               data-ng-model="dashboard.creditCardData.creditCardNumber" 
+                               valid-number
+                               ng-minlength="12"
+                               ng-maxlength="19"
+                               required />
+                        <div role="alert" class="help-inline error">
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.creditCardNumber.$error.required">This field is required.</label>
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.creditCardNumber.$error.minlength">Number must be at least 12 digits in length.</label>
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.creditCardNumber.$error.maxlength">Number must be less than 19 digits in length.</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group col-md-2">
+                        <h5>SECURITY CODE</h5>
+                        <input type="text" class="form-control ng-class:{'error':dashboard.showNewCardErrors && !dashboard.creditCardDetailsForm.securityCode.$valid}"
+                               placeholder="CCV"
+                               name="securityCode"
+                               id="securityCode"
+                               ng-model="dashboard.creditCardData.securityCode" 
+                               valid-number
+                               ng-minlength="3"
+                               ng-maxlength="4"
+                               required />
+                        <div role="alert" class="help-inline error">
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.securityCode.$error.required">This field is required.</label>
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.securityCode.$error.minlength">Number must be at least 3 digits in length.</label>
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.securityCode.$error.maxlength">Number must be less than 4 digits in length.</label>
+                        </div>
+                    </div>
+                </div><!--row-->
+
+                <div class="row">
+                    <div class="form-group col-md-3">
+                        <h5>EXPIRATION MONTH</h5>
+                        <input type="text" class="form-control ng-class:{'error':dashboard.showNewCardErrors && !dashboard.creditCardDetailsForm.expiryMonth.$valid}"
+                               placeholder="Month  MM"
+                               name="expiryMonth"
+                               id="expiryMonth"
+                               ng-model="dashboard.creditCardData.expiryMonth"
+                               valid-number
+                               required />
+                        <div role="alert" class="help-inline error">
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.expiryMonth.$error.required">This field is required.</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group col-md-3">
+                        <h5>EXPIRATION YEAR</h5>
+                        <input type="text"
+                               class="form-control ng-class:{'error':dashboard.showNewCardErrors && !dashboard.creditCardDetailsForm.expiryYear.$valid}"
+                               placeholder="Year  YYYY"
+                               name="expiryYear"
+                               id="expiryYear"
+                               ng-model="dashboard.creditCardData.expiryYear" 
+                               valid-number
+                               required />
+                        <div role="alert" class="help-inline error">
+                            <label class="error alert alert-danger" ng-show="dashboard.showNewCardErrors && dashboard.creditCardDetailsForm.expiryYear.$error.required">This field is required.</label>
+                        </div>
+                    </div>
+                </div><!--row-->
+                @*<h5>EXPIRATION DATE</h5>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <select class="form-control" name="expiryMonth" id="expiryMonth" placeholder="MONTH">
+                                    <option value="">Month</option>
+                                    <option value="1">Jan-01</option>
+                                    <option value="2">Feb-02</option>
+                                    <option value="3">Mar-03</option>
+                                    <option value="4">Apr-04</option>
+                                    <option value="5">May-05</option>
+                                    <option value="6">June-06</option>
+                                    <option value="7">July-07</option>
+                                    <option value="8">Aug-08</option>
+                                    <option value="9">Sept-09</option>
+                                    <option value="10">Oct-10</option>
+                                    <option value="11">Nov-11</option>
+                                    <option value="12">Dec-12</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-3">
+                                <select class="form-control" name="expiryYear" id="expiryYear" placeholder="YEAR">
+                                    <option value="2015">2015</option>
+                                    <option value="2016">2016</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2020">2020</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>*@
+                @*clicking this button (or pressing enter) will submit the form, trigger the ng-submit behavior, calling the fx in the controller*@
+                <div class="row">
+                    <div class="col-sm-2">
+                        <button type="submit" id="submitCreditCardInfo" class="btn btn-success">Submit</button>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div role="alert" class="help-inline success 
+                             ng-class:{'success':dashboard.showValid}">
+                            <label for="submitcreditcardinfo" class="success alert alert-success" ng-show="dashboard.showValid">
+                                Your information was submitted successfully.
+                               @* <span class="glyphicon glyphicon-ok form-control-feedback" aria-hidden="true"></span>*@
+                                @*<span class="col-sm-offset-3 alert hidden " id="successWindow" ng-show="creditCardDetailsForm.$valid" ng-messages="success"></span>*@
+                                
+                            </label>
+                        </div>
+                    </div><!--div for alert column-->
+                </div> <!-- div for row-->
+            </form>
+        </div>
+    </div><!--.panel-body-->
+</section>
+
+@*creates a hidden input in the view*@
+<input type="hidden" id="modelItem" value="@Model.Item" />
+<!-- --------------------------------------- END CREDIT CARD INFORMATION ----------------------------------------------------------- -->
+<!-- --------------------------------------- SCRIPTS BEGIN ----------------------------------------------------------- -->
+@section Scripts {
+    <script src="~/Scripts/sabio.services.creditCard.js"></script>
+    <script type="text/javascript">
+
+        // declared the variable and set them to null
+        // sabio.page.creditId = null;
+        // sabio.page.returnCreditData = null;
+
+        //  this factory method will be executed once by Angular whenever the code needs to access this particular service
+        //this object is coming from sabio.services.creditCard.js file
+        sabio.services.creditCard.ccFactory = function ($baseService) {
+
+            var creditCardObject = sabio.services.creditCard;
+
+            var newService = $.extend(true, {}, creditCardObject, $baseService); //combine the credit card service object with the base service so that Angular knows how to talk to it
+
+            return newService;
+        }
+
+        //these 3 arguments are dependencies which are specified below and passed into the controller by ng
+        sabio.page.ccControllerFactory = function ($scope, $baseController, $creditCardService) {
+
+            //this var represents the actual controller. this is just a shortcut that allows us to attach properties to it easily
+            var vm = this;
+
+            //this line to simulate inheritance
+            $.extend(vm, $baseController);
+
+            //  attach injected dependencies
+            vm.$creditCardService = $creditCardService;
+            vm.$scope = $scope;
+
+            //this is a wrapper for our small dependency on $scope
+            vm.notify = vm.$creditCardService.getNotifier($scope);
+
+            //initialize controller properties which will support our logic
+            vm.creditCardData = null;  // this is the form data - all of the form fields will be bound to this using ng-model
+            vm.creditCardDetailsForm = null; //this will be a reference to the actual form in the html;
+            vm.showNewCardErrors = false; //boolean to keep track of whether or not to show our validation errors on the form
+            vm.showValid = false;
+
+            //expose this controller's public API
+            vm.addCreditCard = _addCreditCard;
+
+            //this property will be used by the html directives to display data and let the user interact with data
+            vm.creditId = null;
+
+            //these are all event handlers for click or ajax events
+            vm.receiveItem = _receiveItem;
+            vm.onError = _onError;
+            vm.onSuccess = _onSuccess;
+
+            function _receiveItem(data) {
+
+                //this receives the data and calls the special notify method that will trigger ng to refresh UI
+                vm.notify(function () {
+                    vm.creditCardData = data.item;
+                    console.log("checking what is data.item", data.item);
+                    console.log("checking vm.creditCardData", vm.creditCardData);
+                });
+            }
+
+            function _onSuccess(data, status, xhr) {
+                $("#msgWindow").removeClass("alert-danger");
+                $("#msgWindow").addClass("alert-info");
+                $("#successWindow").removeClass("hidden");
+                console.log("This is my id", data.item);
+                console.log("Success! The success handler was fired!");
+            }
+
+            function _onError(jqXHR, textStatus, errorThrown) {
+                $("#msgWindow").addClass("alert-danger");
+                $("#msgWindow").removeClass("alert-info");
+                console.log("Error.  Error handler was fired. :-(");
+            }
+            //  invoke the render() function on startup
+            render();
+
+            function render() {
+                //checking to see if there is an Uid on start-up
+                vm.creditId = $("#modelItem").val();
+                console.log("Is there an id?", vm.creditId);
+
+                if (vm.creditId && vm.creditId.length > 0) {
+                    console.log("There is an existing Uid.")
+
+                    vm.$creditCardService.select(vm.creditId, vm.receiveItem, vm.onError);
+                    console.log("Selection ajax call was successful.");
+                }
+            }
+
+            //here will check if the form data is valid every time it is submitted; do the ajax call if valid
+            function _addCreditCard() {
+                vm.showNewCardErrors = true;
+
+                if (vm.creditCardDetailsForm.$valid) {
+                    //in case the Uid was already there, then it needs to update.
+                    if (vm.creditId && vm.creditId.length > 0) {
+                        console.log("Checking my vm.item ", vm.creditId)
+
+                        //invoking the service that calls the function in the sabio.services.creditCard.js file
+                        vm.$creditCardService.update(vm.creditId, vm.creditCardData, vm.onSuccess, vm.onError);
+                        console.log("Update was successful");
+                    }
+                    else {
+                        //  the form is valid and there isn't an existing unique id: submit the form via ajax here
+                        //invoking the function in the sabio.services.creditCard.js file
+                        vm.$creditCardService.create(vm.creditCardData, vm.onSuccess, vm.onError);
+                        console.log("success, data is valid");
+                        vm.showValid = true;
+                    }
+                    console.log("Data is valid! Go save this object ->", vm.creditCardData);
+                }
+                else {
+                    console.error("Form was not submitted due to invalid data:", vm.creditCardData);
+                }
+            }
+        }
+
+        //  we have created a service but we also need to tell Angular about it. without these lines it will not work
+        sabio.ng.addService(sabio.ng.app.module //  this is the global Sabio application which exists on every page
+            , "$creditCardService"  //this simply tells ng what the service should be called. Naming convention: service begins with "$"
+            , ["$baseService"]    //a list of dependencies needed for the service
+            , sabio.services.creditCard.ccFactory);    //this is a reference to the factory function above
+
+        sabio.ng.addController(sabio.ng.app.module
+            , "creditCardController"
+            , ['$scope', '$baseController', '$creditCardService']
+            , sabio.page.ccControllerFactory);
