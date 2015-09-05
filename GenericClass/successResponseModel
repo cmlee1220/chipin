@@ -1,0 +1,20 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Sabio.Web.Models.Responses
+{
+   /// This class simply sets IsSuccesFull to true by default.
+    /// Many of the response classes inherit from here
+    /// since they would be returning IsSuccessFull = true
+    
+    public class SucessResponse :  BaseResponse
+    {
+        public SucessResponse()
+        {
+            
+            this.IsSuccessFull = true;
+        }
+    }
+}
