@@ -1,0 +1,422 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data;
+using System.Data.SqlClient;
+using Sabio.Data;
+using Sabio.Web.Models.Requests;
+using Sabio.Web.Domain;
+using Sabio.Web.Enums;
+using System.Globalization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Sabio.Web.Services.Interfaces;
+
+namespace Sabio.Web.Services
+{
+    public class EventService : BaseService, IEventService
+    {
+        private IMerchantService _merchantService;
+        private IOrganizationsService _organizationsService;
+        private ILocationService _locationService;
+        public EventService(IMerchantService MerchantService, IOrganizationsService organizationsService, ILocationService locationService)
+        {           
+            _merchantService = MerchantService;
+            _organizationsService = organizationsService;
+            _locationService = locationService;
+        }
+        
+          public List<EventDetails> GetConfirmedMerchantEvents(int merchantId)
+        {
+            //create 3 separate lists to be combined at the end
+            List<EventDetails> events = null;
+            List<Merchant> merchants = new List<Merchant>();
+            List<Organization> orgs = new List<Organization>();
+
+            DataProvider.ExecuteCmd(GetConnection, "dbo.MerchantEvents_SelectConfirmedByMerId"
+               , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+               {
+
+                   paramCollection.AddWithValue("@MerchantId", merchantId);
+
+                   //  this is where your input params go. it works the same way as with ExecuteNonQuery.                                                     
+               }        //reader represents the current row that is returned
+               , map: delegate(IDataReader reader, short set)
+               {
+
+                   int startingIndex = 0; //startingOrdinal
+                   if (set == 0) //refers to the first table selected in the db
+                   {
+                       EventDetails currentEvent = new EventDetails();
+                       //these have to go in the exact order they are in the SELECT stored proc
+                       currentEvent.Uid = reader.GetGuid(startingIndex++);
+                       currentEvent.MerchantId = reader.GetSafeInt32(startingIndex++);
+                       currentEvent.OrganizationId = reader.GetSafeInt32(startingIndex++);
+                       currentEvent.ContactName = reader.GetSafeString(startingIndex++);
+                       currentEvent.Title = reader.GetSafeString(startingIndex++);
+                       currentEvent.Start = reader.GetDateTime(startingIndex++);
+                       currentEvent.Start = DateTime.SpecifyKind(currentEvent.Start, DateTimeKind.Utc);   //specify that Start is in UTC
+                       currentEvent.End = reader.GetDateTime(startingIndex++);
+                       currentEvent.End = DateTime.SpecifyKind(currentEvent.End, DateTimeKind.Utc);     //specify that End is in UTC
+                       currentEvent.AllDay = reader.GetBoolean(startingIndex++);
+                       currentEvent.Location = reader.GetSafeString(startingIndex++);
+                       currentEvent.Contribution = reader.GetSafeString(startingIndex++);
+                       currentEvent.Confirm = reader.GetBoolean(startingIndex++);
+                       currentEvent.ClassName = reader.GetSafeString(startingIndex++);
+                       currentEvent.Guests = reader.GetSafeInt32(startingIndex++);
+
+                       if (events == null)
+                       {
+                           events = new List<EventDetails>();
+                       }
+                       events.Add(currentEvent);
+                   }
+
+                   else if (set == 1)
+                   {  //mapping merchant data
+                       Merchant merchant = new Merchant();
+                       merchant.Id = reader.GetSafeInt32(startingIndex++);
+                       merchant.Uid = reader.GetGuid(startingIndex++);
+                       merchant.Name = reader.GetSafeString(startingIndex++);
+                       merchant.Phone = reader.GetSafeString(startingIndex++);
+
+                       merchant.Address = new Address();
+                       merchant.Address.Id = reader.GetSafeInt32(startingIndex++);
+                       if (merchant.Address.Id > 0)
+                       {
+                           merchant.Address.Address1 = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Address2 = reader.GetSafeString(startingIndex++);
+                           merchant.Address.City = reader.GetSafeString(startingIndex++);
+                           merchant.Address.State = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Zip = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Country = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Latitude = reader.GetSafeDecimal(startingIndex++);
+                           merchant.Address.Longitude = reader.GetSafeDecimal(startingIndex++);
+                       }
+                   }
+
+                   else if (set == 2)
+                   {  //mapping organization data
+                       Organization org = new Organization();
+                       org.Id = reader.GetSafeInt32(startingIndex++);
+                       org.Uid = reader.GetGuid(startingIndex++);
+                       org.Name = reader.GetSafeString(startingIndex++);
+                       org.ContactName = reader.GetSafeString(startingIndex++);
+                       org.Phone = reader.GetSafeString(startingIndex++);
+                       org.Address = new Address();
+                       org.Address.Id = reader.GetSafeInt32(startingIndex++);
+
+                       if (org.Address.Id > 0)
+                       {
+                           org.Address.Address1 = reader.GetSafeString(startingIndex++);
+                           org.Address.Address2 = reader.GetSafeString(startingIndex++);
+                           org.Address.City = reader.GetSafeString(startingIndex++);
+                           org.Address.State = reader.GetSafeString(startingIndex++);
+                           org.Address.Zip = reader.GetSafeString(startingIndex++);
+                           org.Address.Country = reader.GetSafeString(startingIndex++);
+                           org.Address.Latitude = reader.GetSafeDecimal(startingIndex++);
+                           org.Address.Longitude = reader.GetSafeDecimal(startingIndex++);
+                       }
+                       else
+                       {
+                           org.Address = null;
+                       }
+
+                       orgs.Add(org);
+                   }
+               }
+               );
+
+            if (events == null)
+            {
+                return events;
+            }
+            else
+            {//looping through the event pulled and finding matching merchant and org, then attaching them
+                foreach (EventDetails eventDetail in events)
+                {
+                    foreach (Merchant merchant in merchants)
+                    {
+                        if (eventDetail.MerchantId == merchant.Id)
+                        {
+                            eventDetail.Merchant = merchant;
+                        }
+                    }
+                    foreach (Organization org in orgs)
+                    {
+                        if (eventDetail.OrganizationId == org.Id)
+                        {
+                            eventDetail.Organization = org;
+                        }
+                    }
+                }
+                return events;
+            }
+        }
+
+        public List<EventDetails> GetConfirmedEventsByOrgId(int orgId)
+        {
+            List<EventDetails> events = null;
+            List<Organization> orgs = new List<Organization>();
+            List<Merchant> merchants = new List<Merchant>();
+
+
+            DataProvider.ExecuteCmd(GetConnection, "dbo.MerchantEvents_SelectConfirmedByOrgId"
+               , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+               {
+
+                   paramCollection.AddWithValue("@OrganizationId", orgId);
+
+                   //  this is where your input params go. it works the same way as with ExecuteNonQuery.                                                     
+               }        //reader represents the current row that is returned
+               , map: delegate(IDataReader reader, short set)
+               {
+                   int startingIndex = 0; //startingOrdinal
+                   if (set == 0) //refers to the first table selected in the db
+                   {
+                       EventDetails currentEvent = new EventDetails();
+                       //these have to go in the exact order they are in the SELECT stored proc
+                       currentEvent.Uid = reader.GetGuid(startingIndex++);
+                       currentEvent.MerchantId = reader.GetSafeInt32(startingIndex++);
+                       currentEvent.OrganizationId = reader.GetSafeInt32(startingIndex++);
+                       currentEvent.ContactName = reader.GetSafeString(startingIndex++);
+                       currentEvent.Title = reader.GetSafeString(startingIndex++);
+                       currentEvent.Start = reader.GetDateTime(startingIndex++);
+                       currentEvent.Start = DateTime.SpecifyKind(currentEvent.Start, DateTimeKind.Utc);   //specify that Start is in UTC
+                       currentEvent.End = reader.GetDateTime(startingIndex++);
+                       currentEvent.End = DateTime.SpecifyKind(currentEvent.End, DateTimeKind.Utc);     //specify that End is in UTC
+                       currentEvent.AllDay = reader.GetBoolean(startingIndex++);
+                       currentEvent.Location = reader.GetSafeString(startingIndex++);
+                       currentEvent.Contribution = reader.GetSafeString(startingIndex++);
+                       currentEvent.Confirm = reader.GetBoolean(startingIndex++);
+                       currentEvent.ClassName = reader.GetSafeString(startingIndex++);
+                       currentEvent.Guests = reader.GetSafeInt32(startingIndex++);
+
+                       if (events == null)
+                       {
+                           events = new List<EventDetails>();
+                       }
+                       events.Add(currentEvent);
+                   }
+
+                   else if (set == 1)
+                   {  //mapping organization data
+                       Organization org = new Organization();
+                       org.Id = reader.GetSafeInt32(startingIndex++);
+                       org.Uid = reader.GetGuid(startingIndex++);
+                       org.Name = reader.GetSafeString(startingIndex++);
+                       org.ContactName = reader.GetSafeString(startingIndex++);
+                       org.Phone = reader.GetSafeString(startingIndex++);
+                       org.Address = new Address();
+                       org.Address.Id = reader.GetSafeInt32(startingIndex++);
+
+                       if (org.Address.Id > 0)
+                       {
+                           org.Address.Address1 = reader.GetSafeString(startingIndex++);
+                           org.Address.Address2 = reader.GetSafeString(startingIndex++);
+                           org.Address.City = reader.GetSafeString(startingIndex++);
+                           org.Address.State = reader.GetSafeString(startingIndex++);
+                           org.Address.Zip = reader.GetSafeString(startingIndex++);
+                           org.Address.Country = reader.GetSafeString(startingIndex++);
+                           org.Address.Latitude = reader.GetSafeDecimal(startingIndex++);
+                           org.Address.Longitude = reader.GetSafeDecimal(startingIndex++);
+                       }
+                       else
+                       {
+                           org.Address = null;
+                       }
+
+                       orgs.Add(org);
+                   }
+
+                   else if (set == 2)
+                   {   //mapping merchant data
+                       Merchant merchant = new Merchant();
+                       merchant.Id = reader.GetSafeInt32(startingIndex++);
+                       merchant.Uid = reader.GetGuid(startingIndex++);
+                       merchant.Name = reader.GetSafeString(startingIndex++);
+                       merchant.Phone = reader.GetSafeString(startingIndex++);
+
+                       merchant.Address = new Address();
+                       merchant.Address.Id = reader.GetSafeInt32(startingIndex++);
+                       if (merchant.Address.Id > 0)
+                       {
+                           merchant.Address.Address1 = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Address2 = reader.GetSafeString(startingIndex++);
+                           merchant.Address.City = reader.GetSafeString(startingIndex++);
+                           merchant.Address.State = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Zip = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Country = reader.GetSafeString(startingIndex++);
+                           merchant.Address.Latitude = reader.GetSafeDecimal(startingIndex++);
+                           merchant.Address.Longitude = reader.GetSafeDecimal(startingIndex++);
+                       }
+                       else
+                       {
+                           merchant.Address = null;
+                       }
+
+                   }
+               }
+               );
+            if (events == null)
+            {
+                return events;
+            }
+            else
+            {  //looping through the event pulled and finding matching merchant and org, then attaching them
+                foreach (EventDetails eventDetail in events)
+                {
+                    foreach (Organization org in orgs)
+                    {
+                        if (eventDetail.OrganizationId == org.Id)
+                        {
+                            eventDetail.Organization = org;
+                        }
+                    }
+                    foreach (Merchant merchant in merchants)
+                    {
+                        if (eventDetail.MerchantId == merchant.Id)
+                        {
+                            eventDetail.Merchant = merchant;
+                        }
+                    }
+                }
+                return events;
+            }
+           
+        }
+
+    
+
+        public List<EventDetails> ListLocalEvents(Location location)
+        {
+            List<EventDetails> events = null;
+            List<Organization> orgs = new List<Organization>();
+            List<Merchant> merchants = new List<Merchant>();                      
+
+                DataProvider.ExecuteCmd(GetConnection, "dbo.MerchantEvents_SelectLocalEvents"
+                   , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+                   {
+
+                       paramCollection.AddWithValue("@lat", location.Latitude);
+                       paramCollection.AddWithValue("@lng", location.Longitude);
+                     //  paramCollection.AddWithValue("@distance", "25");  Distance is designated in stored proc
+
+                       //  this is where your input params go. it works the same way as with ExecuteNonQuery.                                                     
+                   }        //reader represents the current row that is returned
+                   , map: delegate(IDataReader reader, short set)
+                   {
+
+                       int startingIndex = 0; //startingOrdinal
+                       if (set == 0) //refers to the first table selected in the db
+                       {
+                           EventDetails currentEvent = new EventDetails();
+                           //these have to go in the exact order they are in the SELECT stored proc
+                           currentEvent.Uid = reader.GetGuid(startingIndex++);
+                           currentEvent.MerchantId = reader.GetSafeInt32(startingIndex++);
+                           currentEvent.OrganizationId = reader.GetSafeInt32(startingIndex++);
+                           currentEvent.ContactName = reader.GetSafeString(startingIndex++);
+                           currentEvent.Title = reader.GetSafeString(startingIndex++);
+                           currentEvent.Start = reader.GetDateTime(startingIndex++);
+                           currentEvent.Start = DateTime.SpecifyKind(currentEvent.Start, DateTimeKind.Utc);   //specify that Start is in UTC
+                           currentEvent.End = reader.GetDateTime(startingIndex++);
+                           currentEvent.End = DateTime.SpecifyKind(currentEvent.End, DateTimeKind.Utc);     //specify that End is in UTC
+                           currentEvent.AllDay = reader.GetBoolean(startingIndex++);
+                           currentEvent.Location = reader.GetSafeString(startingIndex++);
+                           currentEvent.Contribution = reader.GetSafeString(startingIndex++);
+                           currentEvent.Confirm = reader.GetBoolean(startingIndex++);
+                           currentEvent.ClassName = reader.GetSafeString(startingIndex++);
+                           currentEvent.Guests = reader.GetSafeInt32(startingIndex++);
+                           currentEvent.MerchantLatitude = reader.GetSafeDecimal(startingIndex++);
+                           currentEvent.MerchantLongitude = reader.GetSafeDecimal(startingIndex++);
+                           currentEvent.MerchantDistance = reader.GetSafeDouble(startingIndex++);
+                           if (events == null)
+                           {
+                               events = new List<EventDetails>();
+                           }
+                           events.Add(currentEvent);
+                       }
+
+                       else if (set == 1)
+                       {  //mapping merchant data
+                           Merchant merchant = new Merchant();
+                           merchant.Id = reader.GetSafeInt32(startingIndex++);
+                           merchant.Uid = reader.GetGuid(startingIndex++);
+                           merchant.Name = reader.GetSafeString(startingIndex++);
+                           merchant.Phone = reader.GetSafeString(startingIndex++);
+
+                           merchant.Address = new Address();
+                           merchant.Address.Id = reader.GetSafeInt32(startingIndex++);
+                           if (merchant.Address.Id > 0)
+                           {
+                               merchant.Address.Address1 = reader.GetSafeString(startingIndex++);
+                               merchant.Address.Address2 = reader.GetSafeString(startingIndex++);
+                               merchant.Address.City = reader.GetSafeString(startingIndex++);
+                               merchant.Address.State = reader.GetSafeString(startingIndex++);
+                               merchant.Address.Zip = reader.GetSafeString(startingIndex++);
+                               merchant.Address.Country = reader.GetSafeString(startingIndex++);
+                               
+                           }
+                       }
+
+                       else if (set == 2)
+                       {  //mapping organization data
+                           Organization org = new Organization();
+                           org.Id = reader.GetSafeInt32(startingIndex++);
+                           org.Uid = reader.GetGuid(startingIndex++);
+                           org.Name = reader.GetSafeString(startingIndex++);
+                           org.ContactName = reader.GetSafeString(startingIndex++);
+                           org.Phone = reader.GetSafeString(startingIndex++);
+                           org.Address = new Address();
+                           org.Address.Id = reader.GetSafeInt32(startingIndex++);
+
+                           if (org.Address.Id > 0)
+                           {
+                               org.Address.Address1 = reader.GetSafeString(startingIndex++);
+                               org.Address.Address2 = reader.GetSafeString(startingIndex++);
+                               org.Address.City = reader.GetSafeString(startingIndex++);
+                               org.Address.State = reader.GetSafeString(startingIndex++);
+                               org.Address.Zip = reader.GetSafeString(startingIndex++);
+                               org.Address.Country = reader.GetSafeString(startingIndex++);
+                               org.Address.Latitude = reader.GetSafeDecimal(startingIndex++);
+                               org.Address.Longitude = reader.GetSafeDecimal(startingIndex++);
+                           }
+                           else
+                           {
+                               org.Address = null;
+                           }
+
+                           orgs.Add(org);
+                       }
+                   }
+                   );
+                if (events == null)
+                {
+                    return events;
+                }
+                else
+                {
+                    //looping through the event pulled and finding matching merchant and org, then attaching them
+                    foreach (EventDetails eventDetail in events)
+                    {
+                        foreach (Merchant merchant in merchants)
+                        {
+                            if (eventDetail.MerchantId == merchant.Id)
+                            {
+                                eventDetail.Merchant = merchant;
+                            }
+                        }
+                        foreach (Organization org in orgs)
+                        {
+                            if (eventDetail.OrganizationId == org.Id)
+                            {
+                                eventDetail.Organization = org;
+                            }
+                        }
+                    }
+                    return events;
+                }
+            }
+        }
+    }
