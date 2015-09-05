@@ -1,0 +1,651 @@
+@model Sabio.Web.Models.ViewModels.ItemViewModel<Guid?>
+@{
+    ViewBag.Title = "MerchantDescription";
+    Layout = "~/Views/Shared/_ChipinDashboardLayout.cshtml";
+}
+<!-- ============================================================= MAIN ============================================================= -->
+<style>
+    #map-canvas {
+        width: 75%;
+        height: 500px;
+        background-color: #CCC;
+    }
+
+    #panel {
+        position: absolute;
+        top: 5px;
+        left: 80%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+    #descriptionBox{
+        height: 86px;
+        width: 1041px;
+        border-color: #b9c3cd;
+    }
+</style>
+
+<!-- ============================================================= DESCRIPTION ============================================================= -->
+<div class="container inner" id="addInfoSection">
+    <section data-ng-controller="merchantController as merchantInfo" id="merchantController" ng-cloak>
+        <form id="descriptionForm" name="merchantInfo.descriptionForm" ng-submit="merchantInfo.submitDescription()" novalidate>
+        <div id="descriptionSection">
+            <div class="row"><!--Success and Error Messages-->
+                <div id="msgWindow">
+                    <div class="col-sm-4 col-sm-offset-3" data-ng-show="merchantInfo.hasSuccess" style="opacity:1">
+                        <div class="alert text-center ng-class:{'alert-success': merchantInfo.hasSuccess}">{{merchantInfo.msgList}}</div>                     
+                    </div>
+                </div>
+
+                <div id="msgWindow">
+                    <div class="col-sm-4 col-sm-offset-3" data-ng-show="merchantInfo.hasError" style="opacity:1">
+                        <div class="alert text-center ng-class:{'alert-danger': merchantInfo.hasError}">{{merchantInfo.msgList}}</div>                    
+                    </div>
+                </div>
+
+            </div>
+            <h2>Description</h2>
+            <p>This will appear on your merchant page</p>
+            <label for="descriptionBox">Description</label>
+            <textarea name="descriptionBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.descriptionBox.$valid}"
+                      ng-model="merchantInfo.item.description" ng-maxlength="750"
+                      id="descriptionBox" placeholder="Briefly describe your business and its best features here"></textarea>
+
+            <div role="alert" class="help-inline error">
+                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.descriptionBox.$error.required">Description is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                @*<span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.descriptionBox.$error.minlength">Too short! Description must be at least 10 characters</span>*@ <!-- excluded requirements so it can be submitted together with the addl info model below w/o restrictions-->
+                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.descriptionBox.$error.maxlength">Too long! Description must be 750 characters or less</span>
+            </div>
+           
+            <button type="submit" id="submitDescription" class="btn btn-success">Save Changes</button>           
+        </div><!--#description-->
+        </form>
+
+            <!-- ============================================================= SECTION – CONTACT FORM ============================================================= -->
+        @*<div id="loader" style="line-height: 115px; text-align: center;">
+              <img alt="activity indicator" class="mr-15" src="~/content/blankon/global/img/loader/general/3.gif"/>
+        </div>*@
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="alert " id="msgWindow"></div>
+            </div>
+        </div>
+            <div id="merchantInfoSection">
+
+                <h2>Additional Information</h2>
+                <p>This will appear on your merchant page</p>
+
+                <form id="merchantForm" name="merchantInfo.merchantForm" ng-submit="merchantInfo.submitMerchant()" novalidate>
+
+                    @*<form id="additionalMerchantInfoForm" class="forms" action="contact.php" method="post">*@
+
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <label for="nameBox">Merchant Name</label>
+                            <input type="text" name="nameBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.nameBox.$valid}"
+                                   ng-model="merchantInfo.item.name" ng-minlength="2" ng-maxlength="50" required
+                                   id="nameBox" placeholder="Merchant Name">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.nameBox.$error.required">Merchant Name is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.nameBox.$error.minlength">Too short! Address must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.nameBox.$error.maxlength">Too long! Address must be 50 characters or less</span>
+                            </div>
+                            <label for="titlePositionBox">Title Position</label>
+                            <select placeholder="Title"
+                                    name="titlePositionBox"
+                                    class="form-control input-sm ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.titlePositionBox.$valid}"
+                                    ng-model="merchantInfo.item.titlePosition"
+                                    @*reg.states tells where you are pulling from. state declares all objects in that object as states. then everything
+                                        else is a property of a state*@
+                                    ng-options="title for title in merchantInfo.titlePosition"
+                                    ng-init=""
+                                    required></select>
+
+                            <div role="alert" class="help-inline">
+                                <label class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.titlePositionBox.$error.required">Title is required</label>
+                            </div>
+                            <label for="contactNameBox">Contact First Name</label>
+                            <input type="text" name="contactNameBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.contactNameBox.$valid}"
+                                   ng-model="merchantInfo.item.contactName" ng-minlength="2" ng-maxlength="50" required
+                                   id="contactNameBox" placeholder="Contact Name">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactNameBox.$error.required">Contact Name is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactNameBox.$error.minlength">Too short! Address must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactNameBox.$error.maxlength">Too long! Address must be 50 characters or less</span>
+                            </div>
+
+                            <label for="contactNameBox">Contact Last Name</label>
+                            <input type="text" name="contactLastNameBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.contactLastNameBox.$valid}"
+                                   ng-model="merchantInfo.item.contactLastName" ng-minlength="2" ng-maxlength="50" required
+                                   id="contactLastNameBox" placeholder="Contact Last Name">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactLastNameBox.$error.required">Contact Last Name is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactLastNameBox.$error.minlength">Too short! Must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactLastNameBox.$error.maxlength">Too long! Must be 50 characters or less</span>
+                            </div>
+
+                            <label for="contactPhoneBox">Contact Phone</label>
+                            <input type="text" name="contactPhoneBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.contactPhoneBox.$valid}"
+                                   ng-model="merchantInfo.item.contactPhone" ng-minlength="10" ng-maxlength="15" required
+                                   id="contactPhoneBox" placeholder="Enter Phone Number">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactPhoneBox.$error.required">Phone number is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactPhoneBox.$error.minlength">Too short! Phone number must be at least 10 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.contactPhoneBox.$error.maxlength">Too long! Phone number must be 15 characters or less</span>
+                            </div>
+
+                            <label for="addressBox">Address</label>
+                            <input type="text" name="addressBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.addressBox.$valid}"
+                                   ng-model="merchantInfo.item.address.address1" ng-minlength="2" ng-maxlength="50" required
+                                   id="addressBox" placeholder="Enter Street Address">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.addressBox.$error.required">Address is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.addressBox.$error.minlength">Too short! Address must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.addressBox.$error.maxlength">Too long! Address must be 50 characters or less</span>
+                            </div>
+
+                            <label for="cityBox">City</label>
+                            <input type="text" name="cityBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.cityBox.$valid}"
+                                   ng-model="merchantInfo.item.address.city" ng-minlength="2" ng-maxlength="50" required
+                                   id=" citybox" placeholder="Enter City">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.cityBox.$error.required">City is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.cityBox.$error.minlength">Too short! City must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.cityBox.$error.maxlength">Too long! City must be 50 characters or less</span>
+                            </div>
+
+                            <label for="stateBox">State</label>
+                            <select placeholder="STATE"
+                                    name="stateBox"
+                                    class="form-control input-sm ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.stateBox.$valid}"
+                                    ng-model="merchantInfo.item.address.state"
+                                    @*reg.states tells where you are pulling from. state declares all objects in that object as states. then everything
+                                        else is a property of a state*@
+                                    ng-options="states.stateProvinceCode for states in merchantInfo.states track by states.stateProvinceId"
+                                    ng-init="merchantInfo.item.address.state"
+                                    required></select>
+
+                            <div role="alert" class="help-inline">
+                                <label class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.stateBox.$error.required">State is required</label>
+                            </div>
+                            @*
+                            <input type="text" name="stateBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.stateBox.$valid}"
+                                   ng-model="merchantInfo.item.address.state" ng-minlength="2" ng-maxlength="25" required
+                                   id="stateBox" placeholder="Enter State">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.stateBox.$error.required">State is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.stateBox.$error.minlength">Too short! State must be at least 2 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.stateBox.$error.maxlength">Too long! State must be 25 characters or less</span>
+                            </div>*@
+
+                            <label for="zipBox">Zip Code</label>
+                            <input type="text" name="zipBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.zipBox.$valid}"
+                                   ng-model="merchantInfo.item.address.zip" minlength="5" maxlength="5" required
+                                   id="zipBox" placeholder="Enter Zip">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.zipBox.$error.required">Zip Code is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.zipBox.$error.number">Zip Code must be a number</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.zipBox.$error.minlength">Too short! Zip Code must be at least 5 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.zipBox.$error.maxlength">Too long! Zip Code must be 5 characters or less</span>
+                            </div>
+
+                            <label for="phoneBox">Phone</label>
+                            <input type="text" name="phoneBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.phoneBox.$valid}"
+                                   ng-model="merchantInfo.item.phone" ng-minlength="10" ng-maxlength="15" required
+                                   id="phoneBox" placeholder="Enter Phone Number">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.phoneBox.$error.required">Phone number is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.phoneBox.$error.minlength">Too short! Phone number must be at least 10 characters</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.phoneBox.$error.maxlength">Too long! Phone number must be 15 characters or less</span>
+                            </div>
+
+                            <label for="hoursBox">Hours</label>
+                            <textarea type="text" name="hoursBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.hoursBox.$valid}"
+                                      ng-model="merchantInfo.item.hours" ng-minlength="5" required
+                                      id="hoursBox" placeholder="Enter Merchant Hours"></textarea>
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.hoursBox.$error.required">Hours is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.hoursBox.$error.minlength">Too short! Hours must be at least 5 characters</span>
+
+                            </div>
+
+                            <label for="websiteBox">Website</label>
+                            <input type="url" name="websiteBox" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.websiteBox.$valid}"
+                                   ng-model="merchantInfo.item.url" ng-minlength="5" required
+                                   id="websiteBox" placeholder="http://www.chipin.com">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                @*<span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.websiteBox.$error.required">Website is required</span>*@ <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.websiteBox.$error.url"> Website must be in valid URL format (http://www.chipinworld.com)</span>
+                                @*<span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.websiteBox.$error.minlength">Too short! Address must be 5 characters or more</span>*@
+                            </div>
+                            <label for="discount">Discount</label>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <select type="text"
+                                            id="discount"
+                                            name="discount"
+                                            ng-model="merchantInfo.item.discount"
+                                            class="form-control"
+                                            placeholder="Discount"
+                                            required>                                        
+                                        <option value="5">5%</option>
+                                        <option value="10">10%</option>
+                                        <option value="15">15%</option>
+                                        <option value="20">20%</option>
+                                        <option value="25">25%</option>
+                                        <option value="30">30%</option>
+                                        <option value="35">35%</option>
+                                        <option value="40">40%</option>
+                                        <option value="45">45%</option>
+                                        <option value="50">50%</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div role="alert" class="help-inline error">
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.discount.$error.required">Please select an amount.</span>
+                            </div>  
+                            @*<label for="discount">Discount</label>
+                            <input type="url" name="discount" class="form-control ng-class:{'error': merchantInfo.showNewMerchantErrors && !merchantInfo.merchantForm.discount.$valid}"
+                                   ng-model="merchantInfo.item.url" ng-minlength="5" required
+                                   id="discount" placeholder="http://www.chipin.com">
+
+                            <div role="alert" class="help-inline error">
+                                <!-- dashboard.showNewEmployeeErrors is set to true the first time the form is submitted. this happens in the dashboard.addEmployee() function. -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.discount.$error.required">Website is required</span> <!-- errors for specific fields can be accessed with the syntax [form name].[field name].$error.[validator name] -->
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.discount.$error.url"> Website must be in valid URL format (http://www.chipinworld.com)</span>
+                                <span class="error" ng-show="merchantInfo.showNewMerchantErrors && merchantInfo.merchantForm.discount.$error.minlength">Too short! Address must be 5 characters or more</span>
+                            </div>*@
+
+
+
+                            @*<input type="hidden" name="latitude"
+                                   id="latitude" />
+                            <input type="hidden" name="longitude"
+                                   id="longitude" />*@
+
+                            <button type="submit" id="cmdAddMerchant" class="btn btn-success" style="margin: -9px 0 0 135px;">Save Changes</button>
+                        <span><a href="#"></a></span>
+                            @*<button type="submit" class="btn btn-green btn-group-sm btn" id="addInfoSubmit">Save Changes</button>*@
+
+
+                        </div><!-- /.col  -->
+                        @*<div id="panel">
+                            <input id="address" type="text" value="Sydney, NSW">
+                            <input type="button" id="submit" value="Geocode">
+                        </div>*@
+                        <div class="col-md-6">
+                            <div id="map-canvas"></div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>       
+    </section>
+
+    <!-- ============================================================= SECTION – CONTACT FORM : END ============================================================= -->
+
+
+</div> <!--container-->
+<!-- ============================================================= MAIN : END ============================================================= -->
+<!-- JavaScripts placed at the end of the document so the pages load faster -->
+<!--A way to connect the model to the AJAX call???-->
+@*<input type="hidden" id="modelSelectInfo" value="@Model.Item" />*@
+
+@section Scripts {
+    <script src="~/Scripts/sabio.services.merchant.js"></script>
+    <script src="~/Scripts/sabio.services.media.js"></script>
+    <script src="~/Scripts/sabio.services.geo.js"></script>
+    <script>
+
+
+       
+        ////*********ANGULAR SERVICE
+        //  this factory method will be executed one by Angular whenever the code needs to access this particular service
+        sabio.services.merchant.merchantServiceFactory = function ($baseService) {
+            var aMerchantObject = sabio.services.merchant;   //  this object is coming from sabio.tests.services.js file
+            //above and contains one function
+            var newMerchantService = $.extend(true, {}, aMerchantObject, $baseService); //  combine the Sabio service object with
+            //the base service so that Angular knows how to talk to it
+            return newMerchantService;  //  return the new service
+        };
+
+        //  we have created a service but we also need to tell Angular about it. without these lines it will not work
+        sabio.ng.addService(sabio.ng.app.module //  this is the global Sabio application which exists on every page
+            , "$merchantService"  //  this simply tells ng what the service should be called. Angular naming convention
+            //is that service objects all start with "$"
+            , ["$baseService"]    //  a list of dependencies needed for the service - for right now there is only one
+            , sabio.services.merchant.merchantServiceFactory);    //  this is a reference to the factory function above
+
+        sabio.services.merchant.merchantGeoFactory = function ($baseService) {
+            var aMerchantGeoObject = sabio.services.geo;
+            var newMerchantGeoService = $.extend(true, {}, aMerchantGeoObject, $baseService);
+            return newMerchantGeoService;
+        };
+
+        sabio.ng.addService(sabio.ng.app.module
+           , "$merchantGeoService"
+           , ["$baseService"]
+           , sabio.services.merchant.merchantGeoFactory);
+
+        ////******ANGULAR CONTROLLER
+        sabio.services.merchant.merchantControllerFactory = function (
+           //  these three arguments are dependencies which are specified below and passed into the controller by ng
+             $scope
+           , $baseController
+           , $merchantService
+           , $anchorScroll
+           , $location
+           , $merchantGeoService) {
+
+            //  this variable represents the actual controller. this is just a shortcut that allows us to attach properties to it easily
+            var vm = this;
+            //  these properties will be used by the html directives to display data and let the user interact with data
+            
+            vm.item = null;
+            vm.selectedMerchant = null;
+            vm.hasSuccess = false;
+            vm.hasError = false;
+            vm.msgList = [];
+            vm.submitMerchant = _submitMerchant;
+            vm.submitDescription = _submitDescription;
+            vm.geocoder = null;
+            vm.map = null;
+            vm.states = {};
+            vm.stateIndex = null;
+            vm.titlePosition = ["Mr.", "Miss", "Mrs."];
+
+            //  these are all event handlers for click or ajax events
+            vm.receiveItem = _receiveItem;
+            vm.onMerchSuccess = _onMerchSuccess;
+            vm.onDescriptionSuccess = _onDescriptionSuccess;
+            vm.onMerchError = _onMerchError;
+            vm.selectMerchant = _selectMerchant;
+            vm.saveStatus = _saveStatus;
+            vm.onGeoSuccess = _onGeoSuccess;
+            vm.onCodeAddress = _onCodeAddress;
+            vm.getMap = _getMap;
+            vm.getStates = _getStates;
+            vm.statesSuccess = _statesSuccess;
+            vm.statesError = _statesError;
+
+            //  this line to simulate inheritance
+            $.extend(vm, $baseController);
+
+            vm.$merchantService = $merchantService;
+            vm.$merchantGeoService = $merchantGeoService;
+            vm.$anchorScroll = $anchorScroll;
+            vm.$location = $location;
+            vm.$scope = $scope;
+
+
+            //  this is a wrapper for our small dependency on $scope
+            vm.notify = vm.$merchantService.getNotifier($scope);
+
+
+            //  initialize controller properties which will support our logic
+            vm.merchantForm = null; //  this will be a reference to the actual form in our html; more on that below
+            vm.showNewMerchantErrors = false;   //  boolean to keep track of whether or not to show our validation errors on the form
+            vm.descriptionForm = null;
+
+            function _getStates(onSuccess, onError) {
+                vm.$merchantGeoService.getGeo(vm.statesSuccess, vm.statesError);
+
+            }
+
+            function _statesSuccess(data, status, xhr) {
+                vm.notify(function () {
+                    vm.states = data.items;
+                    vm.states.unshift({ stateProvinceCode: "STATE" });
+                    //console.log("this is vm.states: ", vm.states);
+                });
+            }
+
+            function _statesError() {
+                console.log("geo state error");
+            }
+
+            function _receiveItem(data) {
+                //this receives the data and calls the special notify method that will trigger ng to refresh UI
+                vm.notify(function () {
+                    vm.item = data.item;
+                    if (data.item) {
+                        //vm.merchantId = item.uid;
+                        //console.log("this is your id", data.item)
+                        vm.stateIndex = {};
+                        for (var i = 0; i < vm.states.length; i++) {
+                            if (vm.item.address.state == vm.states[i].stateProvinceCode) {
+                                vm.stateIndex = i;
+                                break;
+                            }
+                        }
+                        vm.item.address.state = vm.states[vm.stateIndex];
+                    };
+                });
+                var activeLat = vm.item.address.latitude;
+                var activeLng = vm.item.address.longitude;
+                vm.getMap(activeLat, activeLng);
+            };
+           //vm.merchantId = vm.item.uid; //setting Uid to merchandId
+
+
+            function _submitMerchant() {
+                vm.showNewMerchantErrors = true;
+
+                if (vm.merchantForm.$valid) {
+                    var address = vm.item.address.address1 + " " + vm.item.address.city + " " + vm.item.address.state +
+                       " " + vm.item.address.zip;
+
+                    vm.onCodeAddress(address);
+
+                    console.log("data is valid! go save this object -> ", vm.merchantForm);
+                }
+                else {
+                    console.log("form submitted with invalid data :(")
+                    console.log(vm.merchantForm.$error);
+                }
+            };
+            //updates only description form
+            function _submitDescription() {
+                if (vm.descriptionForm.$valid) {
+
+                    vm.$merchantService.updateDescription({description: vm.item.description}, vm.item.uid, vm.onDescriptionSuccess, vm.onMerchError);
+                    console.log(vm.item.description);
+                }
+            }
+
+            function _onCodeAddress(address) {
+                console.log("code address:", address);
+                //  TODO: refactor the inline success handler into a namespaced function i.e. sabio.page.onGeoSuccess
+                vm.geocoder.geocode({ 'address': address }, vm.onGeoSuccess);
+            };
+
+
+            function _onGeoSuccess(results, status) {
+
+                if (status == google.maps.GeocoderStatus.OK) {
+
+                    var geometry = results[0].geometry;
+                    var locale = geometry.location;
+                    vm.map.setCenter(locale); //  center the map to our lat/lon coordinates from geocode
+
+                    var marker = new google.maps.Marker({   //  drop a pin on the center
+                        map: vm.map,
+                        position: locale
+
+                    });
+
+                    console.log(results[0]);
+
+                    if (geometry.viewport)
+                        vm.map.fitBounds(geometry.viewport); //  resize the map window to zoom in on our piin
+
+                    //  extract our lat and lon values from the response
+                    var lat = locale.lat();
+                    var lon = locale.lng();
+
+                    //  attach lat and lon to the form data
+                    vm.item.address.latitude = lat;
+                    vm.item.address.longitude = lon;
+
+                    //do this to package multilayer items into one format to send to the database
+                    var formData = {};
+                    formData.name = vm.item.name;
+                    formData.titlePosition = vm.item.titlePosition;
+                    formData.contactName = vm.item.contactName;
+                    formData.contactLastName = vm.item.contactLastName;
+                    formData.contactPhone = vm.item.contactPhone;
+                    formData.description = vm.item.description;
+                    formData.phone = vm.item.phone;
+                    formData.hours = vm.item.hours;
+                    formData.discount = vm.item.discount;
+                    formData.replicatedSite = vm.item.replicateSite;
+                    formData.url = vm.item.url;
+                    formData.address = vm.item.address.address1;
+                    formData.city = vm.item.address.city;
+                    formData.stateProvinceId = vm.item.address.state.stateProvinceId;
+                    formData.zip = vm.item.address.zip;
+                    formData.latitude = vm.item.address.latitude;
+                    formData.longitude = vm.item.address.longitude;
+
+                    if (vm.item.uid && vm.item.uid.length > 0) {
+                        console.log(formData);
+
+                        vm.$merchantService.update(formData, vm.item.uid, vm.onMerchSuccess, vm.onMerchError);
+                        console.log("Edit mode, get the data");
+                        console.log("vm.item.uid", vm.item.uid);
+                        
+                    } else {
+
+                        vm.$merchantService.create(formData, vm.receiveItem, vm.onMerchError);
+                        console.log("Create mode, newId is empty");
+                    };
+
+                }
+                else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                };
+            };
+
+            function _getMap(activeLat, activeLng) {
+
+                var activeGeometry = new google.maps.LatLng(activeLat, activeLng);
+               
+                vm.map.setCenter(activeGeometry); //  center the map to our lat/lon coordinates from geocode
+
+                var marker = new google.maps.Marker({   //  drop a pin on the center
+                    map: vm.map,
+                    position: activeGeometry
+                });
+
+                vm.map.setZoom(14);
+            };
+
+            vm.getStates();
+            initiate();
+
+            function initiate() {
+               
+                    vm.$merchantService.selectByUserId(vm.receiveItem, vm.onMerchError);
+                    console.log("Edit mode, here is the data");
+                    console.log(vm.receiveItem);
+               
+
+                vm.geocoder = new google.maps.Geocoder();
+                var latlng = new google.maps.LatLng(33.9885000, -118.3847110);
+                var mapOptions = {
+                    zoom: 15,
+                    center: latlng
+                };
+                vm.map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            };
+
+
+
+            function _selectMerchant(aMerchant) {
+                console.log(aMerchant);
+                vm.selectedMerchant = aMerchant;
+            };
+
+            function _saveStatus(aMerchant) {
+                console.log("Go and save this new data");
+                console.log(aMerchant);
+            };
+
+
+            function _onMerchSuccess(data, status, xhr) {
+                vm.notify(function () {
+
+                vm.hasSuccess = true;
+                vm.msgList = [];
+                vm.msgList.push("Your information was saved successfully.");
+                    vm.$anchorScroll.yOffset = 100;
+                    vm.$location.hash('msgWindow');
+                });
+            }
+
+            function _onDescriptionSuccess(data, status, xhr) {                
+                console.log("Success! Description success handler was fired!");
+                vm.notify(function () {
+
+                    vm.hasSuccess = true;
+                    vm.msgList = [];
+                    vm.msgList.push("Data was saved successfully.");
+                    vm.$anchorScroll.yOffset = 100;
+                    vm.$location.hash('msgWindow');
+                    console.log("this is msgList", vm.msgList);
+                });
+                
+            }
+            function _onMerchError(jqXhr, error) {
+                vm.notify(function () {
+
+                    vm.showNewMerchantErrors = true;
+                    vm.hasError = true;
+                    vm.msgList = [];
+                    vm.msgList.push("Something went wrong! Please try again.");
+                    vm.$anchorScroll.yOffset = 100;
+                    vm.$location.hash('msgWindow');
+                
+                    console.error(error);
+                });
+            };
+            
+        };
+
+        sabio.ng.addController(sabio.ng.app.module
+            , "merchantController"
+            //  here we pass in $merchantService which was created in the previous step
+            , ['$scope', '$baseController', '$merchantService', '$anchorScroll', '$location', '$merchantGeoService']
+            , sabio.services.merchant.merchantControllerFactory);
+
+
+        @Html.Partial("../Shared/_UploadPhotosScripts")
+
+    </script>
+}
