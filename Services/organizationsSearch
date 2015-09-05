@@ -1,0 +1,244 @@
+ using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Data;
+using System.Data.SqlClient;
+using Sabio.Data;
+using Sabio.Data.Providers;
+using Sabio.Web;
+using Sabio.Web.Models;
+using Sabio.Web.Models.Requests;
+using Sabio.Web.Models.Responses;
+using Sabio.Web.Services;
+using Sabio.Web.Domain;
+using Sabio.Web.Enums;
+using System.Web.Http;
+using Sabio.Web.Services.Interfaces;
+
+
+namespace Sabio.Web.Services
+{
+
+    public class OrganizationsService : BaseService, IOrganizationsService
+    {
+
+        private ILocationService _locationService;
+        private IAddressService _addressService;
+
+        public OrganizationsService(ILocationService locationService, IAddressService addressService)
+        {
+            _locationService = locationService;
+            _addressService = addressService;
+        }
+        
+         public List<Organization> SearchFilter(LocationSearchRequest model)
+        {
+            string modelString = null;
+            if (model != null && String.IsNullOrEmpty(model.SearchBy)  && !String.IsNullOrEmpty(model.Name)  )
+            { //search by name only
+
+                List<Organization> nameSearch = SearchByName(model);
+                return nameSearch;
+            }
+
+            else if (model != null)
+            {
+                modelString = model.SearchBy.ToString();
+                //search by zip
+                if (modelString.Length <= 5 && modelString.All(char.IsDigit))
+                {
+                    Location coordinates = _locationService.GetLatLngZip(modelString);
+                    List<Organization> zipSearch = SearchOrganizations(model, coordinates);
+                    return zipSearch;
+                }
+                else if (modelString.IndexOf(',') > -1) //searches for ',' 
+                {//search by city, state
+                    string[] parsedAddress = _locationService.AddressParse(modelString);
+                    Location coordinates = _locationService.GetLatLngCity(parsedAddress);
+                    List<Organization> citySearch = SearchOrganizations(model, coordinates);
+                    return citySearch;
+
+                }
+                else
+                {//search by city only
+                    string searchBy = modelString;
+                    model.City = searchBy;
+                    Location coordinates = _locationService.GetLatLngCityOnly(modelString);
+                    List<Organization> cityOnlySearch = SearchOrganizations(model, coordinates);
+                    return cityOnlySearch;
+                }
+            }
+            else
+            {
+                List<Organization> randomOrg = RandomOrganizations();
+                ItemsResponse<Organization> responseModel = new ItemsResponse<Organization>();
+                responseModel.Items = randomOrg;
+                return randomOrg;
+            }
+
+        }
+
+ public List<Organization> SearchByName(LocationSearchRequest model)
+        {
+            Organization org = null;
+            List<Organization> list = null;
+
+            DataProvider.ExecuteCmd(GetConnection, "dbo.Organizations_SelectByName"
+               , inputParamMapper: delegate(SqlParameterCollection paramCollection)
+               {
+                   paramCollection.AddWithValue("@OrganizationName", model.Name);
+               }
+
+             , map: delegate(IDataReader reader, short set)
+             {
+
+                 int startingIndex = 0; //startingOrdinal
+                 org = new Organization();
+
+                 org.Id = reader.GetSafeInt32(startingIndex++);
+                 org.Uid = reader.GetGuid(startingIndex++);
+                 org.Created = reader.GetSafeDateTime(startingIndex++);
+                 org.Name = reader.GetSafeString(startingIndex++);
+                 org.ContactName = reader.GetSafeString(startingIndex++);
+                 org.Phone = reader.GetSafeString(startingIndex++);
+                 org.AddressId = reader.GetSafeInt32(startingIndex++);
+                 org.Url = reader.GetSafeString(startingIndex++);
+                 org.Slug = reader.GetSafeString(startingIndex++);
+                 org.ExternalCustomerId = reader.GetSafeString(startingIndex++);
+                 org.SubscriptionId = reader.GetSafeInt32(startingIndex++);
+
+                 OrganizationCategories catList = GetOrganizationCategory(org.Uid);
+                 org.Categories = catList.Categories;
+
+                 int addressId = reader.GetSafeInt32(startingIndex++);
+                 if (addressId > 0)
+                 {
+                     org.Address = new Address();
+                     org.Address.Id = addressId;
+
+                     org.Address.Created = reader.GetSafeDateTime(startingIndex++);
+                     org.Address.Address1 = reader.GetSafeString(startingIndex++);
+                     org.Address.Address2 = reader.GetSafeString(startingIndex++);
+                     org.Address.City = reader.GetSafeString(startingIndex++);
+                     org.Address.State = reader.GetSafeString(startingIndex++);
+                     org.Address.Zip = reader.GetSafeString(startingIndex++);
+                     org.Address.Country = reader.GetSafeString(startingIndex++);
+                     org.Address.Latitude = reader.GetDecimal(startingIndex++);
+                     org.Address.Longitude = reader.GetDecimal(startingIndex++);
+                 }
+                 else
+                 {
+                     startingIndex = 12;
+                 }
+                 // org.Address.Distance = reader.GetSafeDouble(startingIndex++);
+
+                 int mediaId = reader.GetSafeInt32(startingIndex++);
+
+                 if (mediaId > 0)
+                 {
+                     org.Media = new Media();
+                     org.Media.ImageId = mediaId;
+                     org.Media.Path = reader.GetSafeString(startingIndex++);
+                     org.Media.DateCreated = reader.GetSafeDateTime(startingIndex++);
+                     org.Media.MediaEnum = reader.GetSafeEnum<MediaType>(startingIndex++);
+                     org.Media.User = reader.GetSafeEnum<UserType>(startingIndex++);
+                     org.Media.Description = reader.GetSafeString(startingIndex++);
+                     org.Media.Title = reader.GetSafeString(startingIndex++);
+                     org.Media.ContentType = reader.GetSafeString(startingIndex++);
+                     org.Media.FullPath = baseUrl + org.Media.Path;
+                 }
+                 else { org.Media = null; };
+
+                 if (list == null)
+                 {
+                     list = new List<Organization>();
+                 }
+
+                 list.Add(org);
+
+             });
+            //go return the organization
+            return list;
+        }
+
+       
+        public List<Organization> RandomOrganizations()
+        {
+
+            List<Organization> list = null;
+
+            DataProvider.ExecuteCmd(GetConnection, "dbo.Organizations_SelectRandom"
+               , inputParamMapper: null
+               , map: delegate(IDataReader reader, short set)
+               {
+                   int startingIndex = 0; //startingOrdinal
+                   Organization org = new Organization();
+
+                   org.Id = reader.GetSafeInt32(startingIndex++);
+                   org.Uid = reader.GetGuid(startingIndex++);
+                   org.Created = reader.GetDateTime(startingIndex++);
+                   org.Name = reader.GetSafeString(startingIndex++);
+                   org.ContactName = reader.GetSafeString(startingIndex++);
+                   org.Phone = reader.GetSafeString(startingIndex++);
+                   org.AddressId = reader.GetSafeInt32(startingIndex++);
+                   org.Url = reader.GetSafeString(startingIndex++);
+                   org.Slug = reader.GetSafeString(startingIndex++);
+                   org.ExternalCustomerId = reader.GetSafeString(startingIndex++);
+                   org.SubscriptionId = reader.GetSafeInt32(startingIndex++);
+
+                   OrganizationCategories catList = GetOrganizationCategory(org.Uid);
+                   org.Categories = catList.Categories;
+
+                   int addressId = reader.GetSafeInt32(startingIndex++);
+
+                   if (addressId > 0)
+                   {
+                       org.Address = new Address();
+                       org.Address.Id = addressId;
+
+                       org.Address.Created = reader.GetSafeDateTime(startingIndex++);
+                       org.Address.Address1 = reader.GetSafeString(startingIndex++);
+                       org.Address.Address2 = reader.GetSafeString(startingIndex++);
+                       org.Address.City = reader.GetSafeString(startingIndex++);
+                       org.Address.State = reader.GetSafeString(startingIndex++);
+                       org.Address.Zip = reader.GetSafeString(startingIndex++);
+                       org.Address.Country = reader.GetSafeString(startingIndex++);
+                       org.Address.Latitude = reader.GetDecimal(startingIndex++);
+                       org.Address.Longitude = reader.GetDecimal(startingIndex++);
+                   }
+                   else
+                   {
+                       startingIndex = 12;
+                   }
+
+                   int mediaId = reader.GetSafeInt32(startingIndex++);
+
+                   if (mediaId > 0)
+                   {
+                       org.Media = new Media();
+                       org.Media.ImageId = mediaId;
+
+                       org.Media.Path = reader.GetSafeString(startingIndex++);
+                       org.Media.DateCreated = reader.GetSafeDateTime(startingIndex++);
+                       org.Media.MediaEnum = reader.GetSafeEnum<MediaType>(startingIndex++);
+                       org.Media.User = reader.GetSafeEnum<UserType>(startingIndex++);
+                       org.Media.Description = reader.GetSafeString(startingIndex++);
+                       org.Media.Title = reader.GetSafeString(startingIndex++);
+                       org.Media.ContentType = reader.GetSafeString(startingIndex++);
+                       org.Media.FullPath = baseUrl + org.Media.Path;
+                   }
+
+                   if (list == null)
+                   {
+                       list = new List<Organization>();
+                   }
+
+                   list.Add(org);
+               }
+
+               );
+
+            return list;
+        }
+        }
