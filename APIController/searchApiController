@@ -16,19 +16,13 @@ namespace Sabio.Web.Controllers.Api
     [RoutePrefix("api/search")]
     public class SearchApiController : ApiController
     {
-        //Private property is created to attach the service when it is injected
-      
         private IOrganizationsService _organizationsService;
-        private IMerchantService _merchantService;
-        private IMemberInfoService _memberInfoService;
 
         //Telling Unity to give us an instance of ILocationService by putting it in the constructor signature
         //Unity knows to give us LocationService because we tell it in App_Start/UnityConfig.cs
-        public SearchApiController(IMerchantService merchantService, IOrganizationsService organizationsService, IMemberInfoService memberInfoService)
+        public SearchApiController(IOrganizationsService organizationsService)
         {
-            _merchantService = merchantService;
             _organizationsService = organizationsService;
-            _memberInfoService = memberInfoService;
         }
   [Route("organization"), HttpGet]
         public HttpResponseMessage OrgMapSearch([FromUri]LocationSearchRequest model)
