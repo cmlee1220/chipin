@@ -1,0 +1,132 @@
+USE [C09]
+GO
+/****** Object:  StoredProcedure [dbo].[MerchantEvents_SelectLocalEvents]    Script Date: 9/4/2015 9:31:40 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROC [dbo].[MerchantEvents_SelectLocalEvents]
+@lat decimal(9,6),
+@lng decimal(9,6),
+@distance float = '25'
+
+AS
+/*
+DECLARE 
+
+@lat decimal(9,6) = 33.9860091,
+@lng decimal(9,6)= -118.3870989,
+@distance int = 25
+
+EXECUTE [dbo].[MerchantEvents_SelectLocalEvents]
+@lat, @lng, @distance 
+
+*/
+
+BEGIN
+declare @eventUids table (Uid uniqueidentifier);
+insert into @eventUids(Uid)
+	SELECT e.Uid	
+	FROM [dbo].[EventsCalendar] e	
+	WHERE e.Confirm = 1 
+	AND e.ClassName = 'Fundraiser';
+	
+with AllRecords as 
+(SELECT
+	e.Uid
+	,e.MerchantId
+	,e.OrganizationId
+	,e.ContactName
+	,e.EventTitle
+	,e.StartDateTime
+	,e.EndDateTime
+	,e.AllDay
+	,e.Location
+	,e.Contribution
+	,e.Confirm
+	,e.ClassName
+	,e.Guests
+	,e.MerchantLatitude
+	,e.MerchantLongitude
+	,(3959*acos( cos( radians(@lat))*cos(radians(e.MerchantLatitude))*cos(radians(e.MerchantLongitude) - radians(@lng))+sin(radians(@lat))*sin(radians(e.MerchantLatitude))))
+		as distance
+	FROM [dbo].[EventsCalendar] e		
+	)		
+	, filteredRecords as (
+		Select *
+		From AllRecords
+		Where distance<@distance		
+	)
+	SELECT
+	filteredRecords.Uid
+	,filteredRecords.MerchantId
+	,filteredRecords.OrganizationId
+	,filteredRecords.ContactName
+	,filteredRecords.EventTitle
+	,filteredRecords.StartDateTime
+	,filteredRecords.EndDateTime
+	,filteredRecords.AllDay
+	,filteredRecords.Location
+	,filteredRecords.Contribution
+	,filteredRecords.Confirm
+	,filteredRecords.ClassName
+	,filteredRecords.Guests
+	,filteredRecords.MerchantLatitude
+	,filteredRecords.MerchantLongitude
+	,filteredRecords.distance
+	FROM filteredRecords
+
+
+-- Connect to the temporary list created
+WHERE filteredRecords.Uid IN(SELECT Uid FROM @eventUids)
+ORDER BY filteredRecords.distance;
+
+SELECT DISTINCT    
+	m.Id 
+	, m.Uid 
+	, m.Name
+	, m.Phone
+	, a.Id
+	, a.Address1
+	, a.Address2
+	, a.City
+	, sp.[StateProvinceCode]
+	, a.Zip
+	, a.Country
+
+FROM [dbo].[Merchants] m
+LEFT JOIN dbo.Addresses a ON m.AddressID = a.ID
+LEFT JOIN [dbo].StateProvince sp on a.StateProvinceId = sp.StateProvinceId
+inner join [dbo].[EventsCalendar] e
+		on m.id = e.MerchantId
+-- Connect to the temporary list created
+WHERE e.Uid IN(SELECT Uid FROM @eventUids);
+		
+
+SELECT DISTINCT
+	o.Id
+	, o.Uid
+	, o.Name
+	, o.ContactName
+	, o.Phone	
+	, a.Id
+	, a.Address1
+	, a.Address2
+	, a.City
+	, sp.StateProvinceCode
+	, a.Zip
+	, a.Country
+	, a.Latitude
+	, a.Longitude
+
+FROM [dbo].[Organizations] o
+LEFT JOIN [dbo].[Addresses] a ON o.AddressID = a.ID
+LEFT JOIN [dbo].[StateProvince] sp on a.StateProvinceId = sp.StateProvinceId
+
+inner join [dbo].[EventsCalendar] e
+		on o.id = e.OrganizationId
+--Connect to the temporary list created
+WHERE e.Uid IN(SELECT Uid FROM @eventUids)
+
+END
+
