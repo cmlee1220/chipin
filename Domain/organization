@@ -1,0 +1,18 @@
+using Sabio.Web.Domain;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Sabio.Web.Domain
+{
+    public class Organization : BusinessEntity
+    {
+        public string Description { get; set; }
+
+        public string Hours { get; set; }
+
+        public List<Category> Categories { get; set; }
+
+    }
+}
