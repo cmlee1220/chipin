@@ -1,0 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace Sabio.Web.Models.Responses
+{
+    /// This is an example of a Generic class 
+    /// <typeparam name="T"></typeparam>
+    public class ItemsResponse<T> : SucessResponse
+    {
+        public List<T> Items { get; set; }
+    }
+}
