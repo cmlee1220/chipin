@@ -1,0 +1,55 @@
+  using Sabio.Web.Domain;
+using Sabio.Web.Models.Requests;
+using Sabio.Web.Services;
+using Sabio.Web.Models.Responses;
+using Sabio.Web.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using Sabio.Web.Services.Interfaces;
+
+namespace Sabio.Web.Controllers.Api
+{
+    [RoutePrefix("api/search")]
+    public class SearchApiController : ApiController
+    {
+        //Private property is created to attach the service when it is injected
+      
+        private IOrganizationsService _organizationsService;
+        private IMerchantService _merchantService;
+        private IMemberInfoService _memberInfoService;
+
+        //Telling Unity to give us an instance of ILocationService by putting it in the constructor signature
+        //Unity knows to give us LocationService because we tell it in App_Start/UnityConfig.cs
+        public SearchApiController(IMerchantService merchantService, IOrganizationsService organizationsService, IMemberInfoService memberInfoService)
+        {
+            _merchantService = merchantService;
+            _organizationsService = organizationsService;
+            _memberInfoService = memberInfoService;
+        }
+  [Route("organization"), HttpGet]
+        public HttpResponseMessage OrgMapSearch([FromUri]LocationSearchRequest model)
+        {
+            HttpResponseMessage result = null;
+
+            if (model.SearchBy == null && model.Name == null)
+            {
+                ErrorResponse noOrgInfo = new ErrorResponse("No search information");
+                result = Request.CreateResponse(HttpStatusCode.BadRequest, noOrgInfo);
+                return result;
+            }
+
+            ItemsResponse<Organization> locationResults = new ItemsResponse<Organization>();
+            locationResults.Items = _organizationsService.SearchFilter(model);
+            if (locationResults.Items != null && locationResults.Items.Count > 0)
+                result = Request.CreateResponse(HttpStatusCode.OK, locationResults);
+            else
+            {
+                ErrorResponse noResults = new ErrorResponse("No results found. Did you enter your location correctly?");
+                result = Request.CreateResponse(HttpStatusCode.BadRequest, noResults);
+            }
+            return result;
+        }
